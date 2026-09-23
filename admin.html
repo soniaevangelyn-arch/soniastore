@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Sonia Store</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse for CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'soft-blue-bg': '#EAF3FF',
+                        'dark-blue': '#1A5F9E',
+                        'dark-blue-hover': '#134B80',
+                    },
+                    fontFamily: {
+                        heading: ['"Fredoka"', 'sans-serif'],
+                        body: ['"Quicksand"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background-color: #FDFBF7; color: #333333; } /* Cream background for inner pages */
+        h1, h2, h3, .font-heading { font-family: '"Fredoka"', sans-serif; }
+        .btn-pill { border-radius: 9999px; transition: all 0.3s ease; }
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row">
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 bg-[#EAF3FF] z-50 flex items-center justify-center">
+        <div class="bg-white p-8 md:p-10 rounded-[24px] shadow-xl w-full max-w-md mx-4 border-2 border-white">
+            <h2 class="text-3xl font-heading font-bold text-center text-dark-blue mb-2">Admin Login</h2>
+            <p class="text-gray-500 text-center mb-8 font-medium">Selamat datang di Sonia Store 💙</p>
+            <div id="loginError" class="hidden bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm mb-6 font-semibold"></div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Email</label>
+                    <input type="email" id="email" required class="w-full px-4 py-3 border-2 border-blue-50 rounded-2xl focus:outline-none focus:border-blue-300 bg-blue-50/30 text-dark-blue font-semibold transition-colors">
+                </div>
+                <div class="mb-8">
+                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Password</label>
+                    <input type="password" id="password" required class="w-full px-4 py-3 border-2 border-blue-50 rounded-2xl focus:outline-none focus:border-blue-300 bg-blue-50/30 text-dark-blue font-semibold transition-colors">
+                </div>
+                <button type="submit" id="loginBtn" class="w-full bg-dark-blue hover:bg-dark-blue-hover text-white font-bold py-3.5 rounded-2xl transition-colors shadow-lg shadow-blue-200">
+                    Login 🚀
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-full md:w-64 bg-white shadow-[4px_0_24px_rgba(26,95,158,0.05)] md:min-h-screen hidden flex-col z-20">
+        <div class="p-6 pb-2 border-b border-blue-50 mb-4">
+            <h1 class="text-2xl font-bold text-dark-blue font-heading flex items-center gap-2">
+                <span class="text-3xl">✨</span> Sonia Admin
+            </h1>
+        </div>
+        <nav class="flex-grow px-4 pb-4 flex flex-col gap-2">
+            <button onclick="showSection('products')" id="nav-products" class="w-full text-left py-3 px-4 rounded-xl bg-blue-50 text-dark-blue font-bold transition-all flex items-center gap-3">
+                <span>📦</span> Data Produk
+            </button>
+            <button onclick="showSection('analytics')" id="nav-analytics" class="w-full text-left py-3 px-4 rounded-xl hover:bg-blue-50/50 text-gray-500 font-semibold transition-all flex items-center gap-3">
+                <span>📊</span> Analytics
+            </button>
+            <button onclick="showSection('feedbacks')" id="nav-feedbacks" class="w-full text-left py-3 px-4 rounded-xl hover:bg-blue-50/50 text-gray-500 font-semibold transition-all flex items-center gap-3">
+                <span>💌</span> Kotak Saran
+            </button>
+            <button onclick="showSection('settings')" id="nav-settings" class="w-full text-left py-3 px-4 rounded-xl hover:bg-blue-50/50 text-gray-500 font-semibold transition-all flex items-center gap-3">
+                <span>⚙️</span> Pengaturan
+            </button>
+            
+            <div class="mt-4 pt-4 border-t border-blue-50">
+                <button onclick="openModal()" class="w-full text-left py-3 px-4 rounded-xl hover:bg-blue-50/50 text-dark-blue font-bold transition-all flex items-center gap-3 border-2 border-dashed border-blue-200 hover:border-blue-300">
+                    <span>➕</span> Tambah Produk
+                </button>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="mainContent" class="flex-grow hidden flex-col h-screen overflow-y-auto bg-[#FDFBF7]">
+        <!-- Topbar -->
+        <header class="bg-white shadow-sm p-4 px-6 flex justify-between items-center sticky top-0 z-10">
+            <h2 class="text-lg md:text-xl font-bold text-dark-blue font-heading">Halo, Admin 👋</h2>
+            <button onclick="handleLogout()" class="text-sm bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2 rounded-full font-bold transition-colors">Logout</button>
+        </header>
+
+        <div class="p-6 md:p-8">
+            <!-- SECTION: DATA PRODUK -->
+            <div id="section-products">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h3 class="text-2xl font-bold text-dark-blue font-heading">Daftar Produk</h3>
+                    <div class="flex flex-wrap gap-3 w-full md:w-auto justify-end">
+                        <div class="relative w-full md:w-56">
+                            <input type="text" id="searchInput" onkeyup="searchProducts()" placeholder="Cari judul..." class="w-full pl-10 pr-4 py-2 border-2 border-blue-100 rounded-xl focus:outline-none focus:border-blue-300 font-semibold text-sm bg-white">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        </div>
+                        <button onclick="exportCSV()" class="bg-white border border-blue-200 text-dark-blue px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 shadow-sm transition-colors flex items-center gap-2">
+                            📥 Export
+                        </button>
+                        <label class="bg-white border border-blue-200 text-dark-blue px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 shadow-sm transition-colors flex items-center gap-2 cursor-pointer">
+                            📤 Import
+                            <input type="file" id="importCsvInput" accept=".csv" class="hidden" onchange="importCSV(event)">
+                        </label>
+                        <button onclick="openModal()" class="bg-dark-blue hover:bg-dark-blue-hover text-white px-5 py-2 rounded-xl font-bold whitespace-nowrap shadow-md shadow-blue-200 transition-colors">
+                            + Tambah
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="bg-white rounded-[20px] shadow-sm overflow-hidden overflow-x-auto border border-blue-50">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-blue-50/50 border-b border-blue-50 text-dark-blue text-sm font-bold">
+                                <th class="p-4 pl-6">Gambar</th>
+                                <th class="p-4">Judul Produk</th>
+                                <th class="p-4">Kategori</th>
+                                <th class="p-4">Harga</th>
+                                <th class="p-4">Terjual</th>
+                                <th class="p-4 text-center pr-6">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody" class="text-sm font-medium text-gray-600">
+                            <!-- Rows rendered via JS -->
+                        </tbody>
+                    </table>
+                    <div id="tableLoading" class="text-center p-10 text-blue-400 font-bold hidden">Memuat data produk... ⏳</div>
+                    <div id="tableEmpty" class="text-center p-10 text-gray-400 font-semibold hidden">Belum ada produk. Tambahkan yuk!</div>
+                </div>
+            </div>
+
+            <!-- SECTION: ANALYTICS -->
+            <div id="section-analytics" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-dark-blue font-heading">Dashboard Analytics 📊</h3>
+                    <button onclick="loadAnalytics()" class="bg-white border border-blue-100 hover:bg-blue-50 text-dark-blue px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition-colors">
+                        🔄 Refresh
+                    </button>
+                </div>
+                
+                <div id="analyticsLoading" class="text-center py-10 text-blue-400 font-bold hidden">Memuat data analitik... ⏳</div>
+                
+                <div id="analyticsContent" class="hidden">
+                    <!-- Stat Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-50">
+                            <p class="text-gray-500 text-sm font-semibold mb-1">Total Klik (All-time)</p>
+                            <p class="text-3xl font-bold text-dark-blue font-heading" id="statTotal">0</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-50">
+                            <p class="text-gray-500 text-sm font-semibold mb-1">Avg Klik/Hari (7 Hari)</p>
+                            <p class="text-3xl font-bold text-dark-blue font-heading" id="stat7d">0</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-50">
+                            <p class="text-gray-500 text-sm font-semibold mb-1">Avg Klik/Hari (30 Hari)</p>
+                            <p class="text-3xl font-bold text-dark-blue font-heading" id="stat30d">0</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-50">
+                            <p class="text-gray-500 text-sm font-semibold mb-1">Avg Klik/Hari (1 Tahun)</p>
+                            <p class="text-3xl font-bold text-dark-blue font-heading" id="stat365d">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <!-- Line Chart -->
+                        <div class="bg-white p-6 rounded-[20px] shadow-sm border border-blue-50">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-dark-blue font-heading text-lg">Tren Klik per Hari</h4>
+                                <select id="filterChartHari" onchange="updateChartHari()" class="px-3 py-1.5 border border-blue-100 rounded-lg text-sm font-semibold text-gray-600 bg-white outline-none focus:border-blue-300">
+                                    <option value="7">7 Hari Terakhir</option>
+                                    <option value="30">30 Hari Terakhir</option>
+                                    <option value="365">1 Tahun Terakhir</option>
+                                </select>
+                            </div>
+                            <div class="relative h-64">
+                                <canvas id="chartHari"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Bar Chart -->
+                        <div class="bg-white p-6 rounded-[20px] shadow-sm border border-blue-50">
+                            <h4 class="font-bold text-dark-blue font-heading text-lg mb-4">Distribusi Klik per Jam (All-time)</h4>
+                            <div class="relative h-64">
+                                <canvas id="chartJam"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ranking Table -->
+                    <div class="bg-white rounded-[20px] shadow-sm overflow-hidden border border-blue-50">
+                        <div class="p-6 border-b border-blue-50">
+                            <h4 class="font-bold text-dark-blue font-heading text-lg">Peringkat Produk Terpopuler</h4>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-blue-50/50 border-b border-blue-50 text-dark-blue text-sm font-bold">
+                                        <th class="p-4 pl-6">Produk</th>
+                                        <th class="p-4 w-48">Total Klik</th>
+                                        <th class="p-4">Klik Hari Ini</th>
+                                        <th class="p-4">Klik 7 Hari</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rankingTableBody" class="text-sm font-medium text-gray-600">
+                                    <!-- Rendered via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: KOTAK SARAN -->
+            <div id="section-feedbacks" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h3 class="text-2xl font-bold text-dark-blue font-heading">Kotak Saran 💌</h3>
+                    <button onclick="loadFeedbacks()" class="bg-white border border-blue-100 hover:bg-blue-50 text-dark-blue px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition-colors">
+                        🔄 Refresh
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="feedbacksGrid">
+                    <!-- Feedbacks rendered via JS -->
+                </div>
+                
+                <div id="feedbacksLoading" class="text-center p-10 text-blue-400 font-bold hidden">Memuat saran... ⏳</div>
+                <div id="feedbacksEmpty" class="text-center p-10 text-gray-400 font-semibold hidden">
+                    <div class="text-4xl mb-3">🍃</div>
+                    Belum ada saran yang masuk dari pengunjung.
+                </div>
+            </div>
+
+            <!-- SECTION: PENGATURAN -->
+            <div id="section-settings" class="hidden">
+                <h3 class="text-2xl font-bold text-dark-blue font-heading mb-6">Pengaturan Website ⚙️</h3>
+                
+                <div class="bg-white p-6 md:p-8 rounded-[24px] shadow-sm border border-blue-50 max-w-2xl">
+                    <h4 class="font-bold text-lg text-dark-blue mb-4">Pengaturan Musik Latar</h4>
+                    <form onsubmit="saveSettings(event)">
+                        <div class="mb-5">
+                            <label class="block text-sm font-bold text-dark-blue mb-2">Link Musik (URL) ATAU Upload File MP3</label>
+                            <div class="flex flex-col gap-3">
+                                <input type="text" id="inputMusicUrl" placeholder="Contoh: https://link.com/musik.mp3" class="w-full px-4 py-3 border-2 border-blue-100 rounded-xl focus:outline-none focus:border-blue-300 bg-gray-50 text-dark-blue font-semibold transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Atau Upload</span>
+                                    <input type="file" id="inputMusicFile" accept="audio/mpeg,audio/mp3" class="text-sm font-medium text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-dark-blue hover:file:bg-blue-200 cursor-pointer transition-colors">
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2">Kosongkan URL dan file jika ingin mematikan fitur pemutar musik di web utama.</p>
+                        </div>
+                        
+                        <div class="mb-6 p-4 bg-blue-50/50 rounded-xl flex items-center gap-4">
+                            <button type="button" onclick="previewMusic()" class="bg-white border border-blue-200 text-dark-blue px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors shadow-sm">
+                                ▶ Test Audio
+                            </button>
+                            <span class="text-sm text-gray-500 font-medium" id="audioStatus">Klik Test untuk mencoba memutar...</span>
+                            <audio id="audioPreview" class="hidden"></audio>
+                        </div>
+                        
+                        <button type="submit" id="btnSaveSettings" class="bg-dark-blue hover:bg-dark-blue-hover text-white px-6 py-3 rounded-xl font-bold shadow-md shadow-blue-200 transition-colors">
+                            Simpan Pengaturan
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal Form (Add/Edit) -->
+    <div id="productModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-dark-blue/40 backdrop-blur-sm opacity-0 pointer-events-none">
+        <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4 rounded-[24px] shadow-2xl relative">
+            <div class="sticky top-0 bg-white px-8 py-5 border-b border-gray-100 flex justify-between items-center z-10 rounded-t-[24px]">
+                <h3 id="modalTitle" class="text-xl font-bold text-dark-blue font-heading">Tambah Produk</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 text-3xl leading-none transition-colors">&times;</button>
+            </div>
+            
+            <form id="productForm" onsubmit="saveProduct(event)" class="p-8 pt-6">
+                <!-- ... Same as before ... -->
+                <input type="hidden" id="productId">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Kategori Utama *</label>
+                        <select id="inputCategory" required onchange="handleCategoryChange()" class="w-full px-4 py-2.5 border-2 border-blue-50 rounded-xl focus:border-blue-300 outline-none text-sm font-semibold text-gray-600 bg-blue-50/20">
+                            <option value="">Pilih Kategori</option>
+                            <option value="Perawatan & Kecantikan">Perawatan & Kecantikan</option>
+                            <option value="Tumbler">Tumbler</option>
+                            <option value="Outfit">Outfit</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Sub Kategori</label>
+                        <select id="inputSubCategory" disabled class="w-full px-4 py-2.5 border-2 border-gray-100 rounded-xl focus:border-blue-300 outline-none text-sm font-semibold text-gray-600 bg-gray-50">
+                            <option value="">Pilih Sub (Jika Perawatan)</option>
+                            <option value="Skincare">Skincare</option>
+                            <option value="Hair Care">Hair Care</option>
+                            <option value="Body Care">Body Care</option>
+                            <option value="Makeup">Makeup</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Judul Produk *</label>
+                    <input type="text" id="inputTitle" required placeholder="Contoh: Skintific 5X Ceramide..." class="w-full px-4 py-2.5 border-2 border-blue-50 rounded-xl focus:border-blue-300 outline-none text-sm font-semibold bg-blue-50/20">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+                    <div>
+                        <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Harga Asli (Rp) *</label>
+                        <input type="number" id="inputPrice" required min="0" class="w-full px-4 py-2.5 border-2 border-blue-50 rounded-xl focus:border-blue-300 outline-none text-sm font-semibold bg-blue-50/20">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Harga Diskon</label>
+                        <input type="number" id="inputDiscountPrice" min="0" placeholder="Opsional" class="w-full px-4 py-2.5 border-2 border-blue-50 rounded-xl focus:border-blue-300 outline-none text-sm font-semibold bg-blue-50/20">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Terjual *</label>
+                        <input type="number" id="inputSales" required min="0" placeholder="Cth: 1500" class="w-full px-4 py-2.5 border-2 border-blue-50 rounded-xl focus:border-blue-300 outline-none text-sm font-semibold bg-blue-50/20">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Link Affiliate Shopee *</label>
+                    <input type="url" id="inputAffiliateLink" required placeholder="https://shope.ee/..." class="w-full px-4 py-2.5 border-2 border-blue-50 rounded-xl focus:border-blue-300 outline-none text-sm font-semibold bg-blue-50/20">
+                </div>
+
+                <div class="mb-8 p-5 border-2 border-dashed border-blue-200 rounded-2xl bg-blue-50/30">
+                    <label class="block text-sm font-bold text-dark-blue mb-3">Gambar Produk *</label>
+                    <div class="flex flex-col gap-4">
+                        <input type="url" id="inputImageUrl" placeholder="Paste URL gambar langsung ATAU pilih file di bawah" class="w-full px-4 py-2 border border-blue-100 rounded-lg focus:border-blue-300 outline-none text-sm font-medium bg-white">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">Atau Upload</span>
+                            <input type="file" id="inputFile" accept="image/*" class="text-sm font-medium text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-dark-blue hover:file:bg-blue-200 cursor-pointer transition-colors">
+                        </div>
+                        <div class="mt-2 h-32 w-32 bg-white border-2 border-gray-100 rounded-xl overflow-hidden flex items-center justify-center shadow-sm">
+                            <img id="imagePreview" src="" class="hidden w-full h-full object-cover">
+                            <span id="imagePlaceholder" class="text-xs text-gray-400 font-bold">Preview</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-5 border-t border-gray-100">
+                    <button type="button" onclick="closeModal()" class="px-6 py-2.5 text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold transition-colors">Batal</button>
+                    <button type="submit" id="saveBtn" class="px-8 py-2.5 bg-dark-blue hover:bg-dark-blue-hover text-white rounded-xl font-bold transition-colors flex items-center gap-2 shadow-md shadow-blue-200">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ====== ISI DENGAN DATA SUPABASE KAMU ======
+        const SUPABASE_URL = "https://uzezdoaunstiwmiejqvo.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_8N6DATKw4jpw7L-cBpCNKQ_eQNS0ji1";
+        const STORAGE_BUCKET = "product-images";
+        // ==========================================
+
+        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let productsData = [];
+
+        // --- AUTH LOGIC ---
+        async function checkSession() {
+            const { data: { session } } = await client.auth.getSession();
+            if (session) {
+                showSection('products');
+            } else {
+                showLogin();
+            }
+
+            client.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN') showSection('products');
+                if (event === 'SIGNED_OUT') showLogin();
+            });
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            const errorDiv = document.getElementById('loginError');
+            
+            btn.innerHTML = 'Login... ⏳';
+            btn.disabled = true;
+            errorDiv.classList.add('hidden');
+
+            const { data, error } = await client.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+                btn.innerHTML = 'Login 🚀';
+                btn.disabled = false;
+            } else {
+                btn.innerHTML = 'Login 🚀';
+                btn.disabled = false;
+                showSection('products');
+            }
+        }
+
+        async function handleLogout() {
+            await client.auth.signOut();
+        }
+
+        function showLogin() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('sidebar').classList.add('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('flex');
+        }
+
+        function showSection(section) {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('sidebar').classList.remove('hidden');
+            document.getElementById('sidebar').classList.add('flex');
+            document.getElementById('mainContent').classList.remove('hidden');
+            document.getElementById('mainContent').classList.add('flex');
+
+            // Hide all sections
+            document.getElementById('section-products').classList.add('hidden');
+            document.getElementById('section-feedbacks').classList.add('hidden');
+            document.getElementById('section-settings').classList.add('hidden');
+            document.getElementById('section-analytics').classList.add('hidden');
+            
+            const baseClass = "w-full text-left py-3 px-4 rounded-xl hover:bg-blue-50/50 text-gray-500 font-semibold transition-all flex items-center gap-3";
+            const activeClass = "w-full text-left py-3 px-4 rounded-xl bg-blue-50 text-dark-blue font-bold transition-all flex items-center gap-3";
+
+            // Reset all nav buttons
+            document.getElementById('nav-products').className = baseClass;
+            document.getElementById('nav-feedbacks').className = baseClass;
+            document.getElementById('nav-settings').className = baseClass;
+            document.getElementById('nav-analytics').className = baseClass;
+
+            // Show active section
+            document.getElementById('section-' + section).classList.remove('hidden');
+            document.getElementById('nav-' + section).className = activeClass;
+
+            // Load data specific to section
+            if (section === 'products') loadAdminProducts();
+            else if (section === 'feedbacks') loadFeedbacks();
+            else if (section === 'settings') loadSettingsData();
+            else if (section === 'analytics') loadAnalytics();
+        }
+
+        // --- HELPERS ---
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        }
+
+        function formatPenjualan(angka) {
+            if (angka >= 1000000) return `Terjual ${(angka / 1000000).toFixed(1).replace('.0', '')}jt+`;
+            if (angka >= 1000) return `Terjual ${(angka / 1000).toFixed(1).replace('.0', '')}rb+`;
+            return `Terjual ${angka}`;
+        }
+
+        // --- CRUD LOGIC PRODUK ---
+        async function loadAdminProducts() {
+            document.getElementById('tableLoading').classList.remove('hidden');
+            document.getElementById('tableEmpty').classList.add('hidden');
+            const tbody = document.getElementById('productTableBody');
+            tbody.innerHTML = '';
+
+            const { data, error } = await client
+                .from('products')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            document.getElementById('tableLoading').classList.add('hidden');
+
+            if (error) {
+                alert('Gagal memuat data: ' + error.message);
+                return;
+            }
+
+            productsData = data;
+            renderTable(data);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('productTableBody');
+            if (data.length === 0) {
+                document.getElementById('tableEmpty').classList.remove('hidden');
+                tbody.innerHTML = '';
+                return;
+            }
+            document.getElementById('tableEmpty').classList.add('hidden');
+
+            tbody.innerHTML = data.map(p => `
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td class="p-4 pl-6">
+                        <img src="${p.image_url}" alt="thumb" class="w-14 h-14 rounded-xl object-cover border border-gray-200 shadow-sm">
+                    </td>
+                    <td class="p-4 font-bold text-dark-blue max-w-xs truncate" title="${p.title}">${p.title}</td>
+                    <td class="p-4 text-xs">
+                        <span class="bg-blue-100 text-dark-blue px-2.5 py-1 rounded-md font-bold">${p.category}</span>
+                        ${p.subcategory ? `<br><span class="text-gray-400 mt-1.5 inline-block font-semibold">${p.subcategory}</span>` : ''}
+                    </td>
+                    <td class="p-4 text-dark-blue font-bold">
+                        ${p.discount_price ? `<span class="text-[11px] text-gray-400 line-through font-semibold mr-1">${formatRupiah(p.price)}</span><br>` : ''}
+                        ${formatRupiah(p.discount_price || p.price)}
+                    </td>
+                    <td class="p-4 font-semibold">${formatPenjualan(p.sales)}</td>
+                    <td class="p-4 text-center pr-6">
+                        <button onclick="editProduct('${p.id}')" class="text-blue-500 hover:text-blue-700 mr-3 font-bold bg-blue-50 px-3 py-1 rounded-md">Edit</button>
+                        <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700 font-bold bg-red-50 px-3 py-1 rounded-md">Hapus</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function searchProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = productsData.filter(p => p.title.toLowerCase().includes(query));
+            renderTable(filtered);
+        }
+
+        // --- CSV LOGIC ---
+        function exportCSV() {
+            if (productsData.length === 0) {
+                alert("Tidak ada data produk untuk diexport.");
+                return;
+            }
+            
+            const exportData = productsData.map(p => ({
+                id: p.id,
+                title: p.title,
+                category: p.category,
+                subcategory: p.subcategory || '',
+                price: p.price,
+                discount_price: p.discount_price || '',
+                sales: p.sales,
+                affiliate_link: p.affiliate_link,
+                image_url: p.image_url
+            }));
+
+            const csv = Papa.unparse(exportData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Sonia_Produk_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importCSV(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: async function(results) {
+                    const data = results.data;
+                    if (data.length === 0) {
+                        alert("File CSV kosong atau format header tidak sesuai.");
+                        e.target.value = '';
+                        return;
+                    }
+
+                    if (!confirm(`Ditemukan ${data.length} baris di dalam CSV. Mulai proses import?`)) {
+                        e.target.value = ''; 
+                        return;
+                    }
+
+                    document.getElementById('tableLoading').classList.remove('hidden');
+                    document.getElementById('tableLoading').innerText = "Sedang mengimpor data ke Supabase... Mohon tunggu ⏳";
+                    document.getElementById('tableEmpty').classList.add('hidden');
+                    document.getElementById('productTableBody').innerHTML = '';
+
+                    let successCount = 0;
+                    let errorCount = 0;
+
+                    for (const row of data) {
+                        try {
+                            const payload = {
+                                title: row.title,
+                                category: row.category,
+                                subcategory: row.subcategory || null,
+                                price: parseInt(row.price),
+                                discount_price: row.discount_price ? parseInt(row.discount_price) : null,
+                                sales: parseInt(row.sales) || 0,
+                                affiliate_link: row.affiliate_link,
+                                image_url: row.image_url
+                            };
+                            
+                            if (row.id && row.id.trim() !== '') {
+                                // Upsert based on existing ID
+                                const { error } = await client.from('products').upsert({ id: row.id, ...payload });
+                                if (error) throw error;
+                            } else {
+                                // Insert new row
+                                const { error } = await client.from('products').insert([payload]);
+                                if (error) throw error;
+                            }
+                            successCount++;
+                        } catch (err) {
+                            console.error("Gagal import baris:", row.title, err);
+                            errorCount++;
+                        }
+                    }
+
+                    alert(`Proses Import Selesai!\n✅ Berhasil: ${successCount}\n❌ Gagal: ${errorCount}`);
+                    e.target.value = ''; // Reset file input
+                    document.getElementById('tableLoading').innerText = "Memuat data produk... ⏳";
+                    loadAdminProducts();
+                },
+                error: function(err) {
+                    alert("Error membaca file CSV: " + err.message);
+                    e.target.value = '';
+                }
+            });
+        }
+
+        // --- ANALYTICS LOGIC ---
+        // Kalau performa query lambat saat data sudah jutaan, disarankan membuat fungsi RPC di database:
+        // CREATE FUNCTION get_click_analytics(period text) RETURNS table(...) AS $$ ... $$ LANGUAGE sql;
+        // Dan panggil dari JS: const { data } = await client.rpc('get_click_analytics', { period: '7d' });
+        // Namun untuk data awal, fetch biasa (aggregation di frontend) masih sangat memadai dan mudah dicustomize.
+
+        let clickLogsData = [];
+        let chartJamInstance = null;
+        let chartHariInstance = null;
+
+        async function loadAnalytics() {
+            document.getElementById('analyticsLoading').classList.remove('hidden');
+            document.getElementById('analyticsContent').classList.add('hidden');
+
+            // Ambil semua click logs beserta data produk yang diklik
+            const { data: logs, error: logError } = await client
+                .from('click_logs')
+                .select('*, products(id, title, image_url)');
+            
+            if (logError) {
+                alert("Gagal load analytics: " + logError.message);
+                document.getElementById('analyticsLoading').classList.add('hidden');
+                return;
+            }
+
+            // Ambil semua produk untuk keperluan tabel ranking
+            const { data: prods, error: prodError } = await client.from('products').select('*');
+            
+            clickLogsData = logs || [];
+            
+            calculateStats();
+            updateChartHari(); // Akan render line chart berdasarkan select box
+            renderChartJam(); // Render bar chart jam
+            renderRankingTable(prods || []);
+
+            document.getElementById('analyticsLoading').classList.add('hidden');
+            document.getElementById('analyticsContent').classList.remove('hidden');
+        }
+
+        function calculateStats() {
+            const now = new Date();
+            const total = clickLogsData.length;
+            
+            const filterByDays = (days) => clickLogsData.filter(l => (now - new Date(l.clicked_at)) <= days * 24 * 60 * 60 * 1000).length;
+
+            const c7 = filterByDays(7);
+            const c30 = filterByDays(30);
+            const c365 = filterByDays(365);
+
+            document.getElementById('statTotal').innerText = total;
+            document.getElementById('stat7d').innerText = Math.round(c7 / 7) || 0;
+            document.getElementById('stat30d').innerText = Math.round(c30 / 30) || 0;
+            document.getElementById('stat365d').innerText = Math.round(c365 / 365) || 0;
+        }
+
+        function renderChartJam() {
+            const hourCounts = new Array(24).fill(0);
+            clickLogsData.forEach(l => {
+                const hour = new Date(l.clicked_at).getHours();
+                hourCounts[hour]++;
+            });
+
+            const ctx = document.getElementById('chartJam').getContext('2d');
+            if(chartJamInstance) chartJamInstance.destroy();
+            
+            // Mengganti warna chart sesuai tema (biru pastel)
+            chartJamInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'Total Klik',
+                        data: hourCounts,
+                        backgroundColor: '#93C5FD', // Biru pastel
+                        borderRadius: 4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function updateChartHari() {
+            const days = parseInt(document.getElementById('filterChartHari').value);
+            const now = new Date();
+            const filteredLogs = clickLogsData.filter(l => (now - new Date(l.clicked_at)) <= days * 24 * 60 * 60 * 1000);
+
+            // Menyiapkan array tanggal dari hari ini mundur ke belakang
+            const dateCounts = {};
+            for (let i = days - 1; i >= 0; i--) {
+                let d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                dateCounts[dateStr] = 0; // Inisialisasi 0
+            }
+            
+            // Mengisi array tanggal dengan data klik
+            filteredLogs.forEach(l => {
+                const dateStr = new Date(l.clicked_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                if (dateCounts[dateStr] !== undefined) {
+                    dateCounts[dateStr]++;
+                }
+            });
+
+            const labels = Object.keys(dateCounts);
+            const dataPoints = Object.values(dateCounts);
+
+            const ctx = document.getElementById('chartHari').getContext('2d');
+            if(chartHariInstance) chartHariInstance.destroy();
+            
+            chartHariInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Klik',
+                        data: dataPoints,
+                        borderColor: '#1A5F9E', // Biru gelap
+                        backgroundColor: 'rgba(26, 95, 158, 0.1)', // Biru transparan
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#1A5F9E'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+
+        function renderRankingTable(products) {
+            const now = new Date();
+            
+            // Hitung statistik untuk tiap produk
+            const ranks = products.map(p => {
+                const pLogs = clickLogsData.filter(l => l.product_id === p.id);
+                const total = pLogs.length;
+                const today = pLogs.filter(l => {
+                    const d = new Date(l.clicked_at);
+                    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                }).length;
+                const days7 = pLogs.filter(l => (now - new Date(l.clicked_at)) <= 7 * 24 * 60 * 60 * 1000).length;
+                return { ...p, total, today, days7 };
+            });
+
+            // Urutkan berdasarkan total klik tertinggi
+            ranks.sort((a,b) => b.total - a.total);
+            const maxTotal = ranks[0]?.total || 1; // Untuk referensi panjang bar
+
+            const tbody = document.getElementById('rankingTableBody');
+            tbody.innerHTML = ranks.map(r => `
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td class="p-4 flex items-center gap-3">
+                        <img src="${r.image_url}" class="w-12 h-12 rounded-lg object-cover border border-gray-200">
+                        <span class="font-bold text-dark-blue line-clamp-2 max-w-[250px] leading-tight" title="${r.title}">${r.title}</span>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-dark-blue w-8">${r.total}</span>
+                            <div class="w-24 bg-blue-50 rounded-full h-2.5 overflow-hidden">
+                                <div class="bg-blue-400 h-full rounded-full" style="width: ${(r.total/maxTotal)*100}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-4 font-semibold text-gray-600">${r.today}</td>
+                    <td class="p-4 font-semibold text-gray-600">${r.days7}</td>
+                </tr>
+            `).join('');
+        }
+
+        // --- KOTAK SARAN LOGIC ---
+        async function loadFeedbacks() {
+            document.getElementById('feedbacksLoading').classList.remove('hidden');
+            document.getElementById('feedbacksEmpty').classList.add('hidden');
+            const grid = document.getElementById('feedbacksGrid');
+            grid.innerHTML = '';
+
+            const { data, error } = await client
+                .from('feedbacks')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            document.getElementById('feedbacksLoading').classList.add('hidden');
+
+            if (error) {
+                alert('Gagal memuat saran: ' + error.message);
+                return;
+            }
+
+            if (data.length === 0) {
+                document.getElementById('feedbacksEmpty').classList.remove('hidden');
+                return;
+            }
+
+            grid.innerHTML = data.map(f => {
+                const date = new Date(f.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+                return `
+                    <div class="bg-white p-6 rounded-[20px] shadow-sm border border-blue-50 flex flex-col hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-bold text-dark-blue text-lg font-heading">${f.name}</h4>
+                            <span class="text-xs text-gray-400 font-semibold bg-gray-50 px-2 py-1 rounded-md">${date}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 font-medium flex-grow mb-5 whitespace-pre-line leading-relaxed">${f.message}</p>
+                        <button onclick="deleteFeedback('${f.id}')" class="self-end text-xs text-red-500 hover:text-red-700 font-bold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors">🗑 Hapus</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function deleteFeedback(id) {
+            if (confirm("Yakin mau hapus pesan saran ini?")) {
+                const { error } = await client.from('feedbacks').delete().eq('id', id);
+                if (error) alert("Error hapus saran: " + error.message);
+                else loadFeedbacks();
+            }
+        }
+
+        // --- PENGATURAN LOGIC ---
+        async function loadSettingsData() {
+            const { data, error } = await client.from('settings').select('*').eq('key', 'music_url').single();
+            if (data) {
+                document.getElementById('inputMusicUrl').value = data.value;
+                document.getElementById('audioPreview').src = data.value;
+                document.getElementById('audioStatus').innerText = data.value ? "Siap diputar." : "Link kosong.";
+            }
+        }
+
+        function previewMusic() {
+            const audio = document.getElementById('audioPreview');
+            const url = document.getElementById('inputMusicUrl').value;
+            const status = document.getElementById('audioStatus');
+            
+            if (!url) {
+                status.innerText = "Isi link terlebih dahulu!";
+                return;
+            }
+
+            if (audio.src !== url && audio.src !== window.location.href + url) {
+                audio.src = url;
+            }
+
+            if (audio.paused) {
+                audio.volume = 0.2; // Set 20% sama dengan web utama
+                audio.play().then(() => {
+                    status.innerText = "Memutar musik... 🎵";
+                }).catch(e => {
+                    status.innerText = "Error memutar musik: Cek validitas URL!";
+                });
+            } else {
+                audio.pause();
+                status.innerText = "Musik dihentikan.";
+            }
+        }
+
+        async function uploadAudio(file) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `bgm_${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await client.storage
+                .from('music-files')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = client.storage
+                .from('music-files')
+                .getPublicUrl(filePath);
+                
+            return data.publicUrl;
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveSettings');
+            const fileInput = document.getElementById('inputMusicFile');
+            let url = document.getElementById('inputMusicUrl').value;
+            
+            btn.innerHTML = 'Menyimpan... ⏳';
+            btn.disabled = true;
+
+            try {
+                if (fileInput.files.length > 0) {
+                    btn.innerHTML = 'Mengupload MP3... ⏳';
+                    url = await uploadAudio(fileInput.files[0]);
+                    document.getElementById('inputMusicUrl').value = url;
+                }
+
+                // Upsert = Update if exists, Insert if not
+                const { error } = await client.from('settings').upsert({ key: 'music_url', value: url });
+                if (error) throw error;
+                
+                alert("Pengaturan musik berhasil disimpan!");
+                document.getElementById('audioPreview').src = url;
+                document.getElementById('audioStatus').innerText = "Siap diputar.";
+                fileInput.value = ''; // Reset file input
+            } catch (err) {
+                alert("Error menyimpan pengaturan: " + err.message);
+            } finally {
+                btn.innerHTML = 'Simpan Pengaturan';
+                btn.disabled = false;
+            }
+        }
+
+        // --- FORM & MODAL LOGIC (PRODUK) ---
+        function handleCategoryChange() {
+            const cat = document.getElementById('inputCategory').value;
+            const subCat = document.getElementById('inputSubCategory');
+            if (cat === 'Perawatan & Kecantikan') {
+                subCat.disabled = false;
+                subCat.classList.remove('bg-gray-50');
+            } else {
+                subCat.disabled = true;
+                subCat.value = "";
+                subCat.classList.add('bg-gray-50');
+            }
+        }
+
+        document.getElementById('inputImageUrl').addEventListener('input', function(e) {
+            updateImagePreview(e.target.value);
+        });
+
+        document.getElementById('inputFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('inputImageUrl').value = '';
+                const reader = new FileReader();
+                reader.onload = function(e) { updateImagePreview(e.target.result); }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function updateImagePreview(src) {
+            const preview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('imagePlaceholder');
+            if (src) {
+                preview.src = src;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            } else {
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        function openModal() {
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('modalTitle').textContent = 'Tambah Produk';
+            handleCategoryChange();
+            updateImagePreview('');
+            
+            const modal = document.getElementById('productModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.body.classList.add('modal-active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('productModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.classList.remove('modal-active');
+        }
+
+        function editProduct(id) {
+            const p = productsData.find(x => x.id == id);
+            if (!p) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Produk';
+            document.getElementById('productId').value = p.id;
+            document.getElementById('inputCategory').value = p.category;
+            handleCategoryChange();
+            document.getElementById('inputSubCategory').value = p.subcategory || '';
+            
+            document.getElementById('inputTitle').value = p.title;
+            document.getElementById('inputPrice').value = p.price;
+            document.getElementById('inputDiscountPrice').value = p.discount_price || '';
+            document.getElementById('inputSales').value = p.sales;
+            document.getElementById('inputAffiliateLink').value = p.affiliate_link;
+            
+            document.getElementById('inputImageUrl').value = p.image_url;
+            document.getElementById('inputFile').value = '';
+            updateImagePreview(p.image_url);
+
+            const modal = document.getElementById('productModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.body.classList.add('modal-active');
+        }
+
+        async function uploadGambar(file) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await client.storage
+                .from(STORAGE_BUCKET)
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = client.storage
+                .from(STORAGE_BUCKET)
+                .getPublicUrl(filePath);
+                
+            return data.publicUrl;
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = 'Menyimpan... ⏳';
+            btn.disabled = true;
+
+            try {
+                const id = document.getElementById('productId').value;
+                const fileInput = document.getElementById('inputFile');
+                let imageUrl = document.getElementById('inputImageUrl').value;
+
+                if (fileInput.files.length > 0) {
+                    imageUrl = await uploadGambar(fileInput.files[0]);
+                }
+
+                if (!imageUrl) throw new Error("Pilih gambar dari file atau masukkan URL gambar.");
+
+                const payload = {
+                    title: document.getElementById('inputTitle').value,
+                    category: document.getElementById('inputCategory').value,
+                    subcategory: document.getElementById('inputSubCategory').value || null,
+                    price: parseInt(document.getElementById('inputPrice').value),
+                    discount_price: document.getElementById('inputDiscountPrice').value ? parseInt(document.getElementById('inputDiscountPrice').value) : null,
+                    sales: parseInt(document.getElementById('inputSales').value),
+                    affiliate_link: document.getElementById('inputAffiliateLink').value,
+                    image_url: imageUrl
+                };
+
+                let res;
+                if (id) {
+                    res = await client.from('products').update(payload).eq('id', id);
+                } else {
+                    res = await client.from('products').insert([payload]);
+                }
+
+                if (res.error) throw res.error;
+
+                closeModal();
+                loadAdminProducts();
+            } catch (err) {
+                alert("Error menyimpan produk: " + err.message);
+            } finally {
+                btn.innerHTML = 'Simpan';
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (confirm("Yakin mau hapus produk ini?")) {
+                const { error } = await client.from('products').delete().eq('id', id);
+                if (error) alert("Error hapus produk: " + error.message);
+                else loadAdminProducts();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkSession);
+    </script>
+</body>
+</html>

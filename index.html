@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sonia Store - Temukan koleksi pilihan cantik, skincare, tumbler, dan aksesoris terbaik dengan harga spesial. Belanja aman dan terpercaya.">
+    <title>Sonia Store - Koleksi Pilihan Cantik Untukmu</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'soft-blue-bg': '#EAF3FF',
+                        'dark-blue': '#1A5F9E',
+                        'dark-blue-hover': '#134B80',
+                        'card-white': '#FFFFFF'
+                    },
+                    fontFamily: {
+                        heading: ['"Fredoka"', 'sans-serif'],
+                        body: ['"Quicksand"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background-color: #EAF3FF; color: #333333; }
+        h1, h2, h3, .font-heading { font-family: '"Fredoka"', sans-serif; }
+        .btn-pill { border-radius: 9999px; transition: all 0.2s ease; }
+        .btn-active { background-color: #1A5F9E; color: white; border: 2px solid #1A5F9E; }
+        .btn-inactive { background-color: white; color: #1A5F9E; border: 2px solid #BFDBFE; }
+        .btn-inactive:hover { background-color: #EAF3FF; border-color: #93C5FD; }
+        .product-card { border-radius: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -8px rgba(26, 95, 158, 0.15); }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        /* Floating animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .animate-float-delayed { animation: float 5s ease-in-out 1s infinite; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative pb-16 overflow-x-hidden">
+
+    <!-- Background Decor -->
+    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <!-- Wavy shape bottom right -->
+        <svg class="absolute -bottom-20 -right-20 w-[600px] text-blue-200/40 animate-float" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path fill="currentColor" d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,81.1,-46.3C90.4,-33.5,96,-18.1,96.6,-2.4C97.1,13.2,92.6,29,83.9,42.5C75.2,56.1,62.2,67.3,47.8,75.1C33.4,82.8,17.7,87.1,1.5,84.5C-14.7,81.9,-29.3,72.4,-43.3,63.1C-57.3,53.8,-70.6,44.7,-79.8,32.2C-89,19.6,-94.1,3.6,-92,-11.1C-89.9,-25.8,-80.6,-39.3,-69.1,-49C-57.6,-58.7,-43.9,-64.6,-30.5,-72.1C-17.1,-79.6,-4,-88.7,10.2,-87.4C24.4,-86.1,30.5,-83.6,44.7,-76.4Z" transform="translate(100 100)" />
+        </svg>
+        <!-- Wavy shape middle left -->
+        <svg class="absolute top-1/4 -left-40 w-[500px] text-blue-100/60 animate-float-delayed" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path fill="currentColor" d="M39.9,-65.7C54.1,-58.5,69.7,-52.3,80.7,-40.7C91.6,-29,97.9,-11.9,94.2,3.1C90.5,18.1,76.8,31,64.2,42.8C51.6,54.6,40.1,65.3,26,71.7C11.9,78.1,-4.8,80.3,-21.3,77.5C-37.8,74.7,-54.1,66.9,-66.3,54.6C-78.5,42.3,-86.6,25.5,-88.4,8.1C-90.2,-9.3,-85.7,-27.3,-75,-41.2C-64.3,-55.1,-47.4,-65,-31.6,-71C-15.8,-77,-1.1,-79.1,13.1,-75.6C27.3,-72.1,30.5,-63,39.9,-65.7Z" transform="translate(100 100)" />
+        </svg>
+    </div>
+
+    <!-- Music Player (Top Left) -->
+    <!-- Disembunyikan secara default (hidden), akan dimunculkan (flex) via JS jika setting tersedia -->
+    <div id="musicPlayerWidget" class="hidden absolute top-4 left-4 z-40 bg-white/70 backdrop-blur-md px-4 py-2.5 rounded-full shadow-sm items-center gap-3 border border-white hover:bg-white transition-colors cursor-pointer">
+        <div class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white text-sm shadow-inner">
+            🎵
+        </div>
+        <div class="hidden sm:block text-xs leading-tight pr-2 border-r border-blue-100">
+            <div class="font-bold text-dark-blue">Sonia Playlist</div>
+            <div class="text-gray-500 font-medium">BGM Relax</div>
+        </div>
+        <div class="flex items-center gap-1.5 text-dark-blue">
+            <button class="hover:text-blue-500 transition px-1">⏮</button>
+            <button id="btnPlayPause" class="hover:text-blue-500 transition px-1 text-lg">▶</button>
+            <button class="hover:text-blue-500 transition px-1">⏭</button>
+        </div>
+        <audio id="bgMusic" loop></audio>
+    </div>
+
+    <!-- Feedback Button (Top Right) -->
+    <div class="absolute top-4 right-4 z-40">
+        <button onclick="document.getElementById('feedbackModal').classList.remove('opacity-0', 'pointer-events-none')" class="bg-white/70 backdrop-blur-md px-4 py-2 rounded-2xl shadow-sm flex items-center gap-3 border border-white hover:bg-white transition-all transform hover:scale-105">
+            <div class="hidden sm:block text-xs text-right">
+                <div class="font-bold text-dark-blue font-heading">Kritik & Saran</div>
+                <div class="text-gray-500 font-medium">Tulis di sini ya! 💖</div>
+            </div>
+            <div class="text-2xl bg-blue-100 p-2 rounded-xl">💌</div>
+        </button>
+    </div>
+
+    <!-- Header -->
+    <header class="text-center pt-28 pb-6 px-4 relative z-10">
+        <div class="flex items-center justify-center gap-3 mb-2">
+            <span class="text-blue-300 font-bold text-xl">✨</span>
+            <h2 class="text-xl md:text-2xl font-heading text-dark-blue font-semibold tracking-wide">Sonia Store</h2>
+            <span class="text-blue-300 font-bold text-xl">✨</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading text-dark-blue font-bold mb-4 flex flex-col items-center justify-center gap-4">
+            <span>Silahkan Berbelanja</span>
+            <span class="text-3xl md:text-4xl bg-blue-100/50 p-4 rounded-full shadow-sm">🛒</span>
+        </h1>
+        <p class="text-gray-600 max-w-xl mx-auto text-sm md:text-base font-medium">
+            Produk unggulan Sonia akan muncul di sini. Setiap kartu dapat diarahkan langsung ke link affiliate Shopee.
+        </p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 md:px-8 max-w-6xl flex-grow relative z-10">
+        
+        <!-- Search & Sort Bar -->
+        <div class="max-w-2xl mx-auto mb-8 flex flex-col md:flex-row gap-3 items-center relative z-10">
+            <div class="relative group w-full flex-grow">
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Cari produk impianmu di sini..." class="w-full px-6 py-3.5 rounded-full border-2 border-white shadow-sm focus:border-dark-blue focus:outline-none text-sm font-semibold bg-white/80 backdrop-blur-md transition-all text-dark-blue placeholder-blue-300">
+                <span class="absolute right-5 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-dark-blue transition-colors text-lg">🔍</span>
+            </div>
+            <div class="w-full md:w-auto shrink-0 relative">
+                <select id="sortPrice" onchange="handleSort()" class="w-full md:w-auto px-6 py-3.5 rounded-full border-2 border-white shadow-sm focus:border-dark-blue focus:outline-none text-sm font-semibold bg-white/80 backdrop-blur-md transition-all text-dark-blue appearance-none pr-10 cursor-pointer">
+                    <option value="default">✨ Urutkan Harga</option>
+                    <option value="asc">💸 Termurah</option>
+                    <option value="desc">💎 Termahal</option>
+                </select>
+                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none text-xs">▼</span>
+            </div>
+        </div>
+
+        <!-- Main Categories -->
+        <div class="flex flex-wrap justify-center gap-2 mb-4" id="mainCategories">
+            <!-- Rendered via JS -->
+        </div>
+
+        <!-- Sub Categories -->
+        <div class="flex flex-wrap justify-center gap-2 mb-10 hidden" id="subCategories">
+            <!-- Rendered via JS -->
+        </div>
+
+        <!-- Products Grid -->
+        <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            <!-- Rendered via JS -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-20 text-dark-blue">
+            <svg class="animate-spin h-10 w-10 mx-auto mb-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="font-bold text-lg font-heading">Memuat produk cantik...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-20 hidden">
+            <div class="text-5xl mb-4">☁️</div>
+            <p class="text-dark-blue font-bold font-heading text-xl mb-1">Yah, belum ketemu!</p>
+            <p class="text-gray-500 font-medium">Coba cari dengan kata kunci lain atau pilih kategori lain.</p>
+        </div>
+
+    </main>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-dark-blue/20 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white w-full max-w-md m-4 rounded-[24px] shadow-2xl p-6 md:p-8 relative transform transition-transform">
+            <button onclick="closeFeedback()" class="absolute top-4 right-5 text-blue-200 hover:text-dark-blue text-3xl leading-none">&times;</button>
+            <h3 class="text-2xl font-heading font-bold text-dark-blue mb-1 text-center">Kritik & Saran 💌</h3>
+            <p class="text-gray-500 text-sm text-center mb-6 font-medium">Bantu Sonia Store jadi lebih baik ya!</p>
+            
+            <form id="feedbackForm" onsubmit="submitFeedback(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Nama Kamu</label>
+                    <input type="text" id="fbName" required placeholder="Cth: Nisa" class="w-full px-4 py-3 rounded-2xl border-2 border-blue-50 focus:border-blue-300 focus:outline-none text-sm font-semibold bg-blue-50/30 text-dark-blue transition-colors">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Pesan / Saran</label>
+                    <textarea id="fbMessage" required rows="4" placeholder="Tulis masukan kamu buat Sonia..." class="w-full px-4 py-3 rounded-2xl border-2 border-blue-50 focus:border-blue-300 focus:outline-none text-sm font-semibold bg-blue-50/30 text-dark-blue transition-colors resize-none"></textarea>
+                </div>
+                <button type="submit" id="fbSubmitBtn" class="w-full bg-dark-blue hover:bg-dark-blue-hover text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-blue-200 active:scale-95 flex justify-center items-center gap-2">
+                    Kirim Pesan 🚀
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/6281234567890?text=Halo%20Sonia%20Store!" target="_blank" class="fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#128C7E] text-white p-3.5 md:p-4 rounded-full shadow-lg shadow-green-200 hover:scale-110 transition-transform active:scale-95 flex items-center justify-center group">
+        <svg class="w-7 h-7 md:w-8 md:h-8 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+        </svg>
+        <div class="absolute right-full mr-4 bg-white text-dark-blue text-sm font-bold py-1 px-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none">
+            Chat via WhatsApp
+        </div>
+    </a>
+
+    <script>
+        // ====== ISI DENGAN DATA SUPABASE KAMU ======
+        const SUPABASE_URL = "https://uzezdoaunstiwmiejqvo.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_8N6DATKw4jpw7L-cBpCNKQ_eQNS0ji1";
+        const STORAGE_BUCKET = "product-images";
+        // ==========================================
+
+        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const MAIN_CATEGORIES = ["Semua", "Perawatan & Kecantikan", "Tumbler", "Outfit"];
+        const SUB_CATEGORIES = ["Semua", "Skincare", "Hair Care", "Body Care", "Makeup"];
+
+        let allProducts = [];
+        let activeMainCat = "Semua";
+        let activeSubCat = "Semua";
+        let searchQuery = "";
+        let sortOption = "default";
+        
+        let wishlist = JSON.parse(localStorage.getItem('sonia_wishlist')) || [];
+
+        function toggleWishlist(id) {
+            if (wishlist.includes(id)) {
+                wishlist = wishlist.filter(wId => wId !== id);
+            } else {
+                wishlist.push(id);
+            }
+            localStorage.setItem('sonia_wishlist', JSON.stringify(wishlist));
+            filterProducts(); // Re-render UI
+        }
+
+        function isWishlisted(id) {
+            return wishlist.includes(id);
+        }
+
+        // --- MUSIC PLAYER LOGIC ---
+        const audio = document.getElementById('bgMusic');
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        audio.volume = 0.2; // Volume kecil 20%
+        let isPlaying = false;
+
+        btnPlayPause.addEventListener('click', () => {
+            if (isPlaying) { 
+                audio.pause(); 
+                btnPlayPause.innerHTML = '▶';
+                isPlaying = false; 
+            } else { 
+                audio.play(); 
+                btnPlayPause.innerHTML = '⏸';
+                isPlaying = true; 
+            }
+        });
+
+        // Ambil URL musik dari database secara dinamis
+        async function loadMusicSettings() {
+            try {
+                const { data, error } = await client.from('settings').select('value').eq('key', 'music_url').single();
+                const widget = document.getElementById('musicPlayerWidget');
+                
+                if (data && data.value && data.value.trim() !== "") {
+                    audio.src = data.value;
+                    widget.classList.remove('hidden');
+                    widget.classList.add('flex'); // Pakai flex agar styling gap-3 dll bekerja
+                } else {
+                    widget.classList.add('hidden');
+                    widget.classList.remove('flex');
+                }
+            } catch (err) {
+                console.error("Error loading music:", err);
+                document.getElementById('musicPlayerWidget').classList.add('hidden');
+            }
+        }
+
+        // --- TRACKING CLICK LOGIC ---
+        function trackClick(productId) {
+            // Proses insert bersifat async tanpa memblokir thread agar tidak ada delay saat buka link affiliate
+            client.from('click_logs').insert([{ product_id: productId }]).then(({error}) => {
+                if(error) console.error("Error tracking click:", error);
+            });
+        }
+
+        // --- FEEDBACK LOGIC ---
+        function closeFeedback() {
+            document.getElementById('feedbackModal').classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        async function submitFeedback(e) {
+            e.preventDefault();
+            const btn = document.getElementById('fbSubmitBtn');
+            const name = document.getElementById('fbName').value;
+            const message = document.getElementById('fbMessage').value;
+            
+            btn.innerHTML = 'Mengirim... ⏳';
+            btn.disabled = true;
+
+            try {
+                const { error } = await client.from('feedbacks').insert([{ name, message }]);
+                if (error) throw error;
+                alert("Terima kasih atas saran kamu! 💖");
+                closeFeedback();
+                document.getElementById('feedbackForm').reset();
+            } catch (err) {
+                alert("Gagal mengirim saran: " + err.message);
+            } finally {
+                btn.innerHTML = 'Kirim Pesan 🚀';
+                btn.disabled = false;
+            }
+        }
+
+        // --- FORMATTING LOGIC ---
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        }
+
+        function formatPenjualan(angka) {
+            if (angka >= 1000000) return `Terjual ${(angka / 1000000).toFixed(1).replace('.0', '')}jt+`;
+            if (angka >= 1000) return `Terjual ${(angka / 1000).toFixed(1).replace('.0', '')}rb+`;
+            return `Terjual ${angka}`;
+        }
+
+        // --- UI LOGIC ---
+        function initUI() {
+            loadMusicSettings(); // Load music URL
+            renderMainCategories();
+            renderSubCategories();
+            loadProducts();
+        }
+
+        function renderMainCategories() {
+            const container = document.getElementById('mainCategories');
+            container.innerHTML = MAIN_CATEGORIES.map(cat => `
+                <button onclick="setMainCategory('${cat}')" 
+                    class="btn-pill px-5 py-2 text-sm font-bold shadow-sm ${activeMainCat === cat ? 'btn-active' : 'btn-inactive'}">
+                    ${cat}
+                </button>
+            `).join('');
+        }
+
+        function renderSubCategories() {
+            const container = document.getElementById('subCategories');
+            if (activeMainCat === "Perawatan & Kecantikan") {
+                container.classList.remove('hidden');
+                container.innerHTML = SUB_CATEGORIES.map(cat => `
+                    <button onclick="setSubCategory('${cat}')" 
+                        class="btn-pill px-4 py-1 text-xs font-bold shadow-sm ${activeSubCat === cat ? 'btn-active' : 'btn-inactive'}">
+                        ${cat}
+                    </button>
+                `).join('');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function setMainCategory(cat) {
+            activeMainCat = cat;
+            if (cat !== "Perawatan & Kecantikan") activeSubCat = "Semua";
+            renderMainCategories();
+            renderSubCategories();
+            filterProducts();
+        }
+
+        function setSubCategory(cat) {
+            activeSubCat = cat;
+            renderSubCategories();
+            filterProducts();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            filterProducts();
+        }
+
+        function handleSort() {
+            sortOption = document.getElementById('sortPrice').value;
+            filterProducts();
+        }
+
+        async function loadProducts() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('productGrid').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+
+            try {
+                const { data, error } = await client
+                    .from('products')
+                    .select('*')
+                    .order('sales', { ascending: false });
+
+                if (error) throw error;
+                allProducts = data;
+                filterProducts();
+            } catch (error) {
+                console.error("Error loading products:", error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('emptyState').innerHTML = `<p class="text-red-500 font-bold">Gagal memuat produk. Cek konfigurasi database.</p>`;
+            }
+        }
+
+        function filterProducts() {
+            let filtered = [...allProducts]; // clone array
+
+            if (activeMainCat !== "Semua") {
+                filtered = filtered.filter(p => p.category === activeMainCat);
+                if (activeMainCat === "Perawatan & Kecantikan" && activeSubCat !== "Semua") {
+                    filtered = filtered.filter(p => p.subcategory === activeSubCat);
+                }
+            }
+
+            if (searchQuery) {
+                filtered = filtered.filter(p => p.title.toLowerCase().includes(searchQuery));
+            }
+
+            // Apply Sorting
+            if (sortOption === "asc") {
+                filtered.sort((a, b) => (a.discount_price || a.price) - (b.discount_price || b.price));
+            } else if (sortOption === "desc") {
+                filtered.sort((a, b) => (b.discount_price || b.price) - (a.discount_price || a.price));
+            } else {
+                filtered.sort((a, b) => b.sales - a.sales); // Default: Terlaris
+            }
+
+            renderProducts(filtered);
+        }
+
+        function renderProducts(products) {
+            document.getElementById('loadingState').classList.add('hidden');
+            
+            const grid = document.getElementById('productGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (products.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                grid.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                grid.innerHTML = products.map(product => {
+                    const priceHtml = product.discount_price 
+                        ? `<div class="flex flex-col">
+                             <span class="text-xs text-gray-400 line-through font-semibold">${formatRupiah(product.price)}</span>
+                             <span class="text-dark-blue text-lg font-bold">${formatRupiah(product.discount_price)}</span>
+                           </div>`
+                        : `<div class="flex flex-col justify-end"><span class="text-dark-blue text-lg font-bold">${formatRupiah(product.price)}</span></div>`;
+
+                    const badgeText = product.subcategory ? product.subcategory : product.category;
+                    const singleBadge = `<div class="absolute top-3 left-3 z-10 bg-blue-100/90 backdrop-blur text-dark-blue text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm">${badgeText}</div>`;
+                    
+                    const heartIcon = isWishlisted(product.id) ? '❤️' : '🤍';
+
+                    return `
+                        <div class="product-card bg-white flex flex-col h-full overflow-hidden border-2 border-white">
+                            <div class="relative w-full aspect-[3/4] bg-gray-50 p-2 pb-0 rounded-t-[20px] group">
+                                <img src="${product.image_url}" alt="${product.title}" class="w-full h-full object-cover rounded-[14px]">
+                                ${singleBadge}
+                                <button onclick="toggleWishlist('${product.id}')" class="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-lg hover:scale-110 transition-transform active:scale-95">
+                                    ${heartIcon}
+                                </button>
+                            </div>
+                            <div class="p-4 md:p-5 flex flex-col flex-grow">
+                                <h3 class="text-sm md:text-base font-bold mb-3 line-clamp-2 text-dark-blue leading-tight">${product.title}</h3>
+                                <div class="mt-auto flex items-end justify-between mb-4">
+                                    ${priceHtml}
+                                </div>
+                                <div class="flex items-center justify-between mt-auto">
+                                    <div class="flex items-center gap-1.5 text-gray-500 text-[11px] md:text-xs font-semibold">
+                                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                        ${formatPenjualan(product.sales)}
+                                    </div>
+                                    <a href="${product.affiliate_link}" target="_blank" onclick="trackClick('${product.id}')" class="bg-dark-blue hover:bg-dark-blue-hover text-white text-xs md:text-sm px-4 py-2.5 rounded-full transition-all font-bold flex items-center gap-2 shadow-md shadow-blue-200">
+                                        Beli <span>→</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Run init when DOM is ready
+        document.addEventListener('DOMContentLoaded', initUI);
+    </script>
+</body>
+</html>
