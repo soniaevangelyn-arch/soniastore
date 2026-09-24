@@ -127,7 +127,7 @@
             
             <!-- 1. Hamburger Categories Toggle -->
             <div class="relative shrink-0">
-                <button onclick="toggleCategories()" class="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full shadow-sm text-dark-blue hover:bg-white transition-colors border-2 border-white">
+                <button id="btnToggleCategories" onclick="toggleCategories()" class="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full shadow-sm text-dark-blue hover:bg-white transition-colors border-2 border-white">
                     <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
 
@@ -336,6 +336,20 @@
         }
 
         // --- UI LOGIC ---
+        // Menutup menu kategori saat mengklik area luar
+        document.addEventListener('click', (event) => {
+            const container = document.getElementById('categoryContainer');
+            const toggleBtn = document.getElementById('btnToggleCategories');
+            
+            if (container && toggleBtn && !container.classList.contains('hidden')) {
+                // Jika klik bukan pada kontainer dan bukan pada tombol garis tiga
+                if (!container.contains(event.target) && !toggleBtn.contains(event.target)) {
+                    container.classList.add('hidden');
+                    container.classList.remove('flex');
+                }
+            }
+        });
+
         function toggleCategories() {
             const container = document.getElementById('categoryContainer');
             if (container.classList.contains('hidden')) {
