@@ -134,10 +134,8 @@
                 <!-- Categories Dropdown Box (Absolute overlay) -->
                 <div id="categoryContainer" class="hidden absolute top-full mt-3 left-0 w-[280px] md:w-[320px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-xl border-2 border-white p-5 flex-col gap-4 origin-top-left z-30">
                     <div class="text-xs font-bold text-gray-400 mb-1 tracking-wider">KATEGORI PRODUK</div>
-                    <!-- Main Categories -->
-                    <div class="flex flex-wrap gap-2" id="mainCategories"></div>
-                    <!-- Sub Categories -->
-                    <div class="flex flex-wrap gap-2 hidden" id="subCategories"></div>
+                    <!-- Main Categories & Sub Categories (Rendered via JS) -->
+                    <div class="flex flex-col gap-2" id="mainCategories"></div>
                 </div>
             </div>
 
@@ -216,8 +214,11 @@
 
         const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const MAIN_CATEGORIES = ["Semua", "Perawatan & Kecantikan", "Tumbler", "Outfit"];
-        const SUB_CATEGORIES = ["Semua", "Skincare", "Hair Care", "Body Care", "Makeup"];
+        const MAIN_CATEGORIES = ["Semua", "Perawatan & Kecantikan", "Tumbler", "Outfit", "Herbal Kecantikan"];
+        const SUB_CATEGORIES = {
+            "Perawatan & Kecantikan": ["Semua", "Skincare", "Hair Care", "Body Care", "Makeup"],
+            "Outfit": ["Semua", "Kaos", "Baju Kemeja", "Dress", "Celana", "Hijab", "Aksesoris"]
+        };
 
         let allProducts = [];
         let activeMainCat = "Semua";
@@ -342,8 +343,10 @@
             const toggleBtn = document.getElementById('btnToggleCategories');
             
             if (container && toggleBtn && !container.classList.contains('hidden')) {
-                // Jika klik bukan pada kontainer dan bukan pada tombol garis tiga
-                if (!container.contains(event.target) && !toggleBtn.contains(event.target)) {
+                // Menggunakan composedPath() agar tidak tertutup otomatis 
+                // ketika elemen tombol kategori di-render ulang oleh Javascript
+                const path = event.composedPath();
+                if (!path.includes(container) && !path.includes(toggleBtn)) {
                     container.classList.add('hidden');
                     container.classList.remove('flex');
                 }
@@ -370,40 +373,51 @@
 
         function renderMainCategories() {
             const container = document.getElementById('mainCategories');
-            container.innerHTML = MAIN_CATEGORIES.map(cat => `
-                <button onclick="setMainCategory('${cat}')" 
-                    class="btn-pill px-5 py-2 text-sm font-bold shadow-sm ${activeMainCat === cat ? 'btn-active' : 'btn-inactive'}">
-                    ${cat}
-                </button>
-            `).join('');
+            let html = '';
+            
+            MAIN_CATEGORIES.forEach(cat => {
+                const isActive = activeMainCat === cat;
+                html += `
+                    <div class="flex flex-col w-full">
+                        <button onclick="setMainCategory('${cat}')" 
+                            class="px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm text-left ${isActive ? 'bg-dark-blue text-white scale-[1.02] border-2 border-dark-blue' : 'bg-white text-dark-blue hover:bg-blue-50 border-2 border-blue-100'}">
+                            ${cat}
+                        </button>
+                `;
+                
+                // Jika kategori aktif dan punya subkategori, tampilkan subkategorinya di bawahnya
+                if (isActive && SUB_CATEGORIES[cat]) {
+                    html += `<div class="flex flex-wrap gap-2 mt-2 mb-2 pl-4 border-l-2 border-blue-200 ml-4">`;
+                    html += SUB_CATEGORIES[cat].map(sub => `
+                        <button onclick="setSubCategory('${sub}')" 
+                            class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm ${activeSubCat === sub ? 'bg-blue-400 text-white border-2 border-blue-400' : 'bg-white text-dark-blue hover:bg-blue-50 border-2 border-blue-100'}">
+                            ${sub}
+                        </button>
+                    `).join('');
+                    html += `</div>`;
+                }
+                
+                html += `</div>`;
+            });
+            
+            container.innerHTML = html;
         }
 
         function renderSubCategories() {
-            const container = document.getElementById('subCategories');
-            if (activeMainCat === "Perawatan & Kecantikan") {
-                container.classList.remove('hidden');
-                container.innerHTML = SUB_CATEGORIES.map(cat => `
-                    <button onclick="setSubCategory('${cat}')" 
-                        class="btn-pill px-4 py-1 text-xs font-bold shadow-sm ${activeSubCat === cat ? 'btn-active' : 'btn-inactive'}">
-                        ${cat}
-                    </button>
-                `).join('');
-            } else {
-                container.classList.add('hidden');
-            }
+            // Function no longer needed since subcategories are rendered inside renderMainCategories.
+            // Keeping it empty to prevent undefined errors if called from elsewhere.
         }
 
         function setMainCategory(cat) {
             activeMainCat = cat;
-            if (cat !== "Perawatan & Kecantikan") activeSubCat = "Semua";
+            activeSubCat = "Semua"; // Reset subkategori
             renderMainCategories();
-            renderSubCategories();
             filterProducts();
         }
 
         function setSubCategory(cat) {
             activeSubCat = cat;
-            renderSubCategories();
+            renderMainCategories(); // Re-render to update subcategory active state
             filterProducts();
         }
 
@@ -444,7 +458,8 @@
 
             if (activeMainCat !== "Semua") {
                 filtered = filtered.filter(p => p.category === activeMainCat);
-                if (activeMainCat === "Perawatan & Kecantikan" && activeSubCat !== "Semua") {
+                // Filter subkategori jika aktif dan bukan "Semua"
+                if (activeSubCat !== "Semua") {
                     filtered = filtered.filter(p => p.subcategory === activeSubCat);
                 }
             }
@@ -481,12 +496,12 @@
                     const priceHtml = product.discount_price 
                         ? `<div class="flex flex-col">
                              <span class="text-xs text-gray-400 line-through font-normal">${formatRupiah(product.price)}</span>
-                             <span class="text-[#ee4d2d] text-base font-bold">${formatRupiah(product.discount_price)}</span>
+                             <span class="text-dark-blue text-base font-bold">${formatRupiah(product.discount_price)}</span>
                            </div>`
-                        : `<div class="flex flex-col"><span class="text-[#ee4d2d] text-base font-bold">${formatRupiah(product.price)}</span></div>`;
+                        : `<div class="flex flex-col"><span class="text-dark-blue text-base font-bold">${formatRupiah(product.price)}</span></div>`;
 
                     const badgeText = product.subcategory ? product.subcategory : product.category;
-                    const singleBadge = `<div class="absolute top-0 left-0 z-10 bg-[#ee4d2d] text-white text-[10px] font-bold px-2 py-1 rounded-br-lg shadow-sm">${badgeText}</div>`;
+                    const singleBadge = `<div class="absolute top-0 left-0 z-10 bg-dark-blue text-white text-[10px] font-bold px-2 py-1 rounded-br-lg shadow-sm">${badgeText}</div>`;
                     
                     const heartIcon = isWishlisted(product.id) ? '❤️' : '🤍';
 
@@ -512,7 +527,7 @@
                                         <div class="text-xs text-gray-500">
                                             Terjual ${formatPenjualan(product.sales)}
                                         </div>
-                                        <a href="${product.affiliate_link}" onclick="trackClick('${product.id}')" target="_blank" class="pointer-events-auto bg-[#ee4d2d] hover:bg-[#d74226] text-white text-xs font-bold py-1.5 px-3 rounded-md transition-colors shadow-sm">
+                                        <a href="${product.affiliate_link}" onclick="trackClick('${product.id}')" target="_blank" class="pointer-events-auto bg-dark-blue hover:bg-dark-blue-hover text-white text-xs font-bold py-1.5 px-3 rounded-md transition-colors shadow-sm">
                                             Beli
                                         </a>
                                     </div>

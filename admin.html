@@ -312,6 +312,7 @@
                             <option value="Perawatan & Kecantikan">Perawatan & Kecantikan</option>
                             <option value="Tumbler">Tumbler</option>
                             <option value="Outfit">Outfit</option>
+                            <option value="Herbal Kecantikan">Herbal Kecantikan</option>
                         </select>
                     </div>
                     <div>
@@ -966,11 +967,20 @@
             }
         }
 
-        // --- FORM & MODAL LOGIC (PRODUK) ---
         function handleCategoryChange() {
             const cat = document.getElementById('inputCategory').value;
             const subCat = document.getElementById('inputSubCategory');
+            
+            subCat.innerHTML = '<option value="">Pilih Sub Kategori</option>';
+            
             if (cat === 'Perawatan & Kecantikan') {
+                const subs = ["Skincare", "Hair Care", "Body Care", "Makeup"];
+                subs.forEach(s => subCat.innerHTML += `<option value="${s}">${s}</option>`);
+                subCat.disabled = false;
+                subCat.classList.remove('bg-gray-50');
+            } else if (cat === 'Outfit') {
+                const subs = ["Kaos", "Baju Kemeja", "Dress", "Celana", "Hijab", "Aksesoris"];
+                subs.forEach(s => subCat.innerHTML += `<option value="${s}">${s}</option>`);
                 subCat.disabled = false;
                 subCat.classList.remove('bg-gray-50');
             } else {
