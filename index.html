@@ -160,7 +160,7 @@
         </div>
 
         <!-- Products Grid -->
-        <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             <!-- Rendered via JS -->
         </div>
 
@@ -466,38 +466,42 @@
                 grid.innerHTML = products.map(product => {
                     const priceHtml = product.discount_price 
                         ? `<div class="flex flex-col">
-                             <span class="text-xs text-gray-400 line-through font-semibold">${formatRupiah(product.price)}</span>
-                             <span class="text-dark-blue text-lg font-bold">${formatRupiah(product.discount_price)}</span>
+                             <span class="text-xs text-gray-400 line-through font-normal">${formatRupiah(product.price)}</span>
+                             <span class="text-[#ee4d2d] text-base font-bold">${formatRupiah(product.discount_price)}</span>
                            </div>`
-                        : `<div class="flex flex-col justify-end"><span class="text-dark-blue text-lg font-bold">${formatRupiah(product.price)}</span></div>`;
+                        : `<div class="flex flex-col"><span class="text-[#ee4d2d] text-base font-bold">${formatRupiah(product.price)}</span></div>`;
 
                     const badgeText = product.subcategory ? product.subcategory : product.category;
-                    const singleBadge = `<div class="absolute top-3 left-3 z-10 bg-blue-100/90 backdrop-blur text-dark-blue text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm">${badgeText}</div>`;
+                    const singleBadge = `<div class="absolute top-0 left-0 z-10 bg-[#ee4d2d] text-white text-[10px] font-bold px-2 py-1 rounded-br-lg shadow-sm">${badgeText}</div>`;
                     
                     const heartIcon = isWishlisted(product.id) ? '❤️' : '🤍';
 
                     return `
-                        <div class="product-card bg-white flex flex-col h-full overflow-hidden border-2 border-white">
-                            <div class="relative w-full aspect-[3/4] bg-gray-50 p-2 pb-0 rounded-t-[20px] group">
-                                <img src="${product.image_url}" alt="${product.title}" class="w-full h-full object-cover rounded-[14px]">
+                        <div class="bg-white flex flex-col h-full overflow-hidden border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow relative">
+                            <div class="relative w-full aspect-[4/5] bg-gray-50 group">
+                                <img src="${product.image_url}" alt="${product.title}" class="w-full h-full object-cover rounded-t-lg">
                                 ${singleBadge}
-                                <button onclick="toggleWishlist('${product.id}')" class="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-lg hover:scale-110 transition-transform active:scale-95">
+                                <button onclick="toggleWishlist('${product.id}')" class="absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-xs hover:scale-110 transition-transform active:scale-95">
                                     ${heartIcon}
                                 </button>
+                                <!-- Overlay Link -->
+                                <a href="${product.affiliate_link}" onclick="trackClick('${product.id}')" target="_blank" class="absolute inset-0 z-0"></a>
                             </div>
-                            <div class="p-4 md:p-5 flex flex-col flex-grow">
-                                <h3 class="text-sm md:text-base font-bold mb-3 line-clamp-2 text-dark-blue leading-tight">${product.title}</h3>
-                                <div class="mt-auto flex items-end justify-between mb-4">
+                            
+                            <div class="p-3 flex flex-col flex-grow relative z-10 pointer-events-none">
+                                <h3 class="text-sm text-gray-800 mb-1 line-clamp-2 leading-tight">${product.title}</h3>
+                                
+                                <div class="mt-auto pt-2">
                                     ${priceHtml}
-                                </div>
-                                <div class="flex items-center justify-between mt-auto">
-                                    <div class="flex items-center gap-1.5 text-gray-500 text-[11px] md:text-xs font-semibold">
-                                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                        ${formatPenjualan(product.sales)}
+                                    
+                                    <div class="flex justify-between items-center mt-2">
+                                        <div class="text-xs text-gray-500">
+                                            Terjual ${formatPenjualan(product.sales)}
+                                        </div>
+                                        <a href="${product.affiliate_link}" onclick="trackClick('${product.id}')" target="_blank" class="pointer-events-auto bg-[#ee4d2d] hover:bg-[#d74226] text-white text-xs font-bold py-1.5 px-3 rounded-md transition-colors shadow-sm">
+                                            Beli
+                                        </a>
                                     </div>
-                                    <a href="${product.affiliate_link}" target="_blank" onclick="trackClick('${product.id}')" class="bg-dark-blue hover:bg-dark-blue-hover text-white text-xs md:text-sm px-4 py-2.5 rounded-full transition-all font-bold flex items-center gap-2 shadow-md shadow-blue-200">
-                                        Beli <span>→</span>
-                                    </a>
                                 </div>
                             </div>
                         </div>
