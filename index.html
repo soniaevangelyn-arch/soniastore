@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sonia Store - Temukan koleksi pilihan cantik, skincare, tumbler, dan aksesoris terbaik dengan harga spesial. Belanja aman dan terpercaya.">
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Sonia Store - Koleksi Pilihan Cantik Untukmu</title>
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
@@ -213,6 +216,33 @@
         // ==========================================
 
         const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // --- KEAMANAN & PROTEKSI WEBSITE (XSS & ANTI-CLICKJACKING) ---
+        // 1. Anti-Clickjacking: Cegah website dibuka diam-diam di dalam iframe situs lain
+        if (window.top !== window.self) {
+            window.top.location = window.self.location;
+        }
+
+        // 2. Sanitasi teks untuk mencegah injeksi script berbahaya (Anti-XSS)
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // 3. Sanitasi URL link & gambar (hanya izinkan protokol http & https yang sah)
+        function sanitizeUrl(url) {
+            if (!url) return '#';
+            const trimmed = String(url).trim();
+            if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
+                return escapeHTML(trimmed);
+            }
+            return '#';
+        }
 
         const MAIN_CATEGORIES = ["Semua", "Perawatan & Kecantikan", "Tumbler", "Outfit", "Herbal Kecantikan"];
         const SUB_CATEGORIES = {
@@ -289,15 +319,22 @@
             }
         }
 
-        // --- TRACKING CLICK LOGIC ---
+        // --- TRACKING CLICK LOGIC (DIPROTEKSI DARI BOT & SPAM KLIK) ---
+        const recentClicks = new Set();
         function trackClick(productId) {
+            if (!productId || typeof productId !== 'string') return;
+            // Cegah bot atau spam klik berulang (hanya 1 klik per produk per 10 detik per user)
+            if (recentClicks.has(productId)) return;
+            recentClicks.add(productId);
+            setTimeout(() => recentClicks.delete(productId), 10000);
+
             // Proses insert bersifat async tanpa memblokir thread agar tidak ada delay saat buka link affiliate
             client.from('click_logs').insert([{ product_id: productId }]).then(({error}) => {
                 if(error) console.error("Error tracking click:", error);
             });
         }
 
-        // --- FEEDBACK LOGIC ---
+        // --- FEEDBACK LOGIC (DIPROTEKSI DARI SPAM & INJEKSI XSS) ---
         function closeFeedback() {
             document.getElementById('feedbackModal').classList.add('opacity-0', 'pointer-events-none');
         }
@@ -305,15 +342,47 @@
         async function submitFeedback(e) {
             e.preventDefault();
             const btn = document.getElementById('fbSubmitBtn');
-            const name = document.getElementById('fbName').value;
-            const message = document.getElementById('fbMessage').value;
+            const nameInput = document.getElementById('fbName');
+            const messageInput = document.getElementById('fbMessage');
             
+            const rawName = nameInput.value.trim();
+            const rawMessage = messageInput.value.trim();
+            
+            // 1. Validasi Input Dasar
+            if (!rawName || !rawMessage) {
+                alert("Mohon isi nama dan pesan saran kamu ya.");
+                return;
+            }
+            if (rawName.length > 50) {
+                alert("Nama terlalu panjang (maksimal 50 karakter).");
+                return;
+            }
+            if (rawMessage.length > 1000) {
+                alert("Pesan saran terlalu panjang (maksimal 1000 karakter).");
+                return;
+            }
+
+            // 2. Proteksi Anti-Spam Rate Limit (Maksimal 1 kali kirim per 30 detik)
+            const lastSent = localStorage.getItem('sonia_fb_cooldown');
+            const now = Date.now();
+            if (lastSent && (now - parseInt(lastSent)) < 30000) {
+                const sisa = Math.ceil((30000 - (now - parseInt(lastSent))) / 1000);
+                alert(`Mohon tunggu ${sisa} detik sebelum mengirim saran lagi ya! 🙏`);
+                return;
+            }
+
             btn.innerHTML = 'Mengirim... ⏳';
             btn.disabled = true;
 
             try {
-                const { error } = await client.from('feedbacks').insert([{ name, message }]);
+                // Simpan data yang sudah disanitasi
+                const { error } = await client.from('feedbacks').insert([{ 
+                    name: escapeHTML(rawName), 
+                    message: escapeHTML(rawMessage) 
+                }]);
                 if (error) throw error;
+
+                localStorage.setItem('sonia_fb_cooldown', String(now));
                 alert("Terima kasih atas saran kamu! 💖");
                 closeFeedback();
                 document.getElementById('feedbackForm').reset();
@@ -500,24 +569,30 @@
                            </div>`
                         : `<div class="flex flex-col"><span class="text-dark-blue text-base font-bold">${formatRupiah(product.price)}</span></div>`;
 
-                    const badgeText = product.subcategory ? product.subcategory : product.category;
-                    const singleBadge = `<div class="absolute top-0 left-0 z-10 bg-dark-blue text-white text-[10px] font-bold px-2 py-1 rounded-br-lg shadow-sm">${badgeText}</div>`;
+                    const safeId = escapeHTML(product.id);
+                    const safeTitle = escapeHTML(product.title);
+                    const safeCategory = escapeHTML(product.category);
+                    const safeSubcategory = product.subcategory ? escapeHTML(product.subcategory) : '';
+                    const badgeText = safeSubcategory ? safeSubcategory : safeCategory;
+                    const safeImageUrl = sanitizeUrl(product.image_url);
+                    const safeAffiliateLink = sanitizeUrl(product.affiliate_link);
                     
+                    const singleBadge = `<div class="absolute top-0 left-0 z-10 bg-dark-blue text-white text-[10px] font-bold px-2 py-1 rounded-br-lg shadow-sm">${badgeText}</div>`;
                     const heartIcon = isWishlisted(product.id) ? '❤️' : '🤍';
 
                     return `
                         <div class="bg-white flex flex-col h-full overflow-hidden border border-gray-200 rounded shadow-sm hover:shadow-md transition-shadow relative">
                             
                             <div class="relative w-full aspect-square bg-gray-50 group">
-                                <img src="${product.image_url}" alt="${product.title}" class="w-full h-full object-cover">
+                                <img src="${safeImageUrl}" alt="${safeTitle}" class="w-full h-full object-cover" loading="lazy">
                                 ${singleBadge}
-                                <button onclick="toggleWishlist('${product.id}')" class="absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-xs hover:scale-110 transition-transform active:scale-95">
+                                <button onclick="toggleWishlist('${safeId}')" class="absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-xs hover:scale-110 transition-transform active:scale-95">
                                     ${heartIcon}
                                 </button>
                             </div>
                             
                             <div class="p-2.5 flex flex-col flex-grow">
-                                <h3 class="text-xs md:text-sm text-gray-800 mb-1 line-clamp-2 leading-snug">${product.title}</h3>
+                                <h3 class="text-xs md:text-sm text-gray-800 mb-1 line-clamp-2 leading-snug">${safeTitle}</h3>
                                 
                                 <div class="mt-auto pt-2">
                                     ${priceHtml}
@@ -526,7 +601,7 @@
                                         <div class="text-[10px] md:text-xs text-gray-500">
                                             Terjual ${formatPenjualan(product.sales)}
                                         </div>
-                                        <a href="${product.affiliate_link}" onclick="trackClick('${product.id}')" target="_blank" class="bg-dark-blue hover:bg-dark-blue-hover text-white text-[10px] md:text-xs font-bold py-1 px-2.5 rounded transition-colors shadow-sm">
+                                        <a href="${safeAffiliateLink}" onclick="trackClick('${safeId}')" target="_blank" rel="noopener noreferrer" class="bg-dark-blue hover:bg-dark-blue-hover text-white text-[10px] md:text-xs font-bold py-1 px-2.5 rounded transition-colors shadow-sm">
                                             Beli
                                         </a>
                                     </div>

@@ -386,6 +386,17 @@
 
         const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // Sanitasi teks untuk mencegah serangan XSS di Dashboard Admin
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         let productsData = [];
 
         // --- AUTH LOGIC ---
@@ -515,15 +526,21 @@
             }
             document.getElementById('tableEmpty').classList.add('hidden');
 
-            tbody.innerHTML = data.map(p => `
+            tbody.innerHTML = data.map(p => {
+                const safeTitle = escapeHTML(p.title);
+                const safeCat = escapeHTML(p.category);
+                const safeSub = p.subcategory ? escapeHTML(p.subcategory) : '';
+                const safeId = escapeHTML(p.id);
+                const safeImage = escapeHTML(p.image_url);
+                return `
                 <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <td class="p-4 pl-6">
-                        <img src="${p.image_url}" alt="thumb" class="w-14 h-14 rounded-xl object-cover border border-gray-200 shadow-sm">
+                        <img src="${safeImage}" alt="thumb" class="w-14 h-14 rounded-xl object-cover border border-gray-200 shadow-sm" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23eee%22/></svg>'">
                     </td>
-                    <td class="p-4 font-bold text-dark-blue max-w-xs truncate" title="${p.title}">${p.title}</td>
+                    <td class="p-4 font-bold text-dark-blue max-w-xs truncate" title="${safeTitle}">${safeTitle}</td>
                     <td class="p-4 text-xs">
-                        <span class="bg-blue-100 text-dark-blue px-2.5 py-1 rounded-md font-bold">${p.category}</span>
-                        ${p.subcategory ? `<br><span class="text-gray-400 mt-1.5 inline-block font-semibold">${p.subcategory}</span>` : ''}
+                        <span class="bg-blue-100 text-dark-blue px-2.5 py-1 rounded-md font-bold">${safeCat}</span>
+                        ${safeSub ? `<br><span class="text-gray-400 mt-1.5 inline-block font-semibold">${safeSub}</span>` : ''}
                     </td>
                     <td class="p-4 text-dark-blue font-bold">
                         ${p.discount_price ? `<span class="text-[11px] text-gray-400 line-through font-semibold mr-1">${formatRupiah(p.price)}</span><br>` : ''}
@@ -531,11 +548,12 @@
                     </td>
                     <td class="p-4 font-semibold">${formatPenjualan(p.sales)}</td>
                     <td class="p-4 text-center pr-6">
-                        <button onclick="editProduct('${p.id}')" class="text-blue-500 hover:text-blue-700 mr-3 font-bold bg-blue-50 px-3 py-1 rounded-md">Edit</button>
-                        <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700 font-bold bg-red-50 px-3 py-1 rounded-md">Hapus</button>
+                        <button onclick="editProduct('${safeId}')" class="text-blue-500 hover:text-blue-700 mr-3 font-bold bg-blue-50 px-3 py-1 rounded-md">Edit</button>
+                        <button onclick="deleteProduct('${safeId}')" class="text-red-500 hover:text-red-700 font-bold bg-red-50 px-3 py-1 rounded-md">Hapus</button>
                     </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function searchProducts() {
@@ -845,14 +863,17 @@
 
             grid.innerHTML = data.map(f => {
                 const date = new Date(f.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+                const safeName = escapeHTML(f.name);
+                const safeMessage = escapeHTML(f.message);
+                const safeId = escapeHTML(f.id);
                 return `
                     <div class="bg-white p-6 rounded-[20px] shadow-sm border border-blue-50 flex flex-col hover:shadow-md transition-shadow">
                         <div class="flex justify-between items-start mb-3">
-                            <h4 class="font-bold text-dark-blue text-lg font-heading">${f.name}</h4>
+                            <h4 class="font-bold text-dark-blue text-lg font-heading">${safeName}</h4>
                             <span class="text-xs text-gray-400 font-semibold bg-gray-50 px-2 py-1 rounded-md">${date}</span>
                         </div>
-                        <p class="text-sm text-gray-600 font-medium flex-grow mb-5 whitespace-pre-line leading-relaxed">${f.message}</p>
-                        <button onclick="deleteFeedback('${f.id}')" class="self-end text-xs text-red-500 hover:text-red-700 font-bold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors">🗑 Hapus</button>
+                        <p class="text-sm text-gray-600 font-medium flex-grow mb-5 whitespace-pre-line leading-relaxed">${safeMessage}</p>
+                        <button onclick="deleteFeedback('${safeId}')" class="self-end text-xs text-red-500 hover:text-red-700 font-bold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors">🗑 Hapus</button>
                     </div>
                 `;
             }).join('');
