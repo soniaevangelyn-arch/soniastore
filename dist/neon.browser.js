@@ -38643,12 +38643,35 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
   var NEON_DATA_API_URL = "https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1";
   var NEON_AUTH_URL = "https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth";
   var VERCEL_BLOB_TOKEN = "vercel_blob_rw_D13YMXPZVpuEHykD_mfsMybgl4xrXWWBAtMpY0NlfVWUwYR";
+  function getAppUrl() {
+    if (typeof window !== "undefined" && window.location?.origin) {
+      if (window.location.protocol !== "file:") {
+        return window.location.origin;
+      }
+    }
+    if (typeof window !== "undefined") {
+      const win = window;
+      if (win.__ENV__?.NEXT_PUBLIC_APP_URL) return win.__ENV__.NEXT_PUBLIC_APP_URL;
+      if (win.__ENV__?.APP_URL) return win.__ENV__.APP_URL;
+    }
+    if (typeof process !== "undefined" && process.env) {
+      if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+      if (process.env.APP_URL) return process.env.APP_URL;
+      if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+        return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+      }
+      if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}`;
+      }
+    }
+    return "http://localhost:3000";
+  }
   if (typeof window === "undefined" && typeof globalThis !== "undefined" && globalThis.fetch) {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async function(input, init) {
       const headers = new Headers(init?.headers || {});
       if (!headers.has("Origin") && !headers.has("origin")) {
-        headers.set("Origin", "http://localhost:3000");
+        headers.set("Origin", getAppUrl());
       }
       const modifiedInit = { ...init, headers };
       try {
@@ -38666,16 +38689,23 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     let authUrl = NEON_AUTH_URL;
     let dataApiUrl = NEON_DATA_API_URL;
     let blobToken = VERCEL_BLOB_TOKEN;
+    let appUrl = getAppUrl();
     if (typeof window !== "undefined") {
       const win = window;
       if (win.__ENV__?.NEON_AUTH_URL) authUrl = win.__ENV__.NEON_AUTH_URL;
       if (win.__ENV__?.NEON_DATA_API_URL) dataApiUrl = win.__ENV__.NEON_DATA_API_URL;
       if (win.__ENV__?.VERCEL_BLOB_READ_WRITE_TOKEN) blobToken = win.__ENV__.VERCEL_BLOB_READ_WRITE_TOKEN;
+      if (win.__ENV__?.NEXT_PUBLIC_APP_URL) appUrl = win.__ENV__.NEXT_PUBLIC_APP_URL;
+      else if (win.__ENV__?.APP_URL) appUrl = win.__ENV__.APP_URL;
     }
     if (typeof process !== "undefined" && process.env) {
       if (process.env.NEON_AUTH_URL) authUrl = process.env.NEON_AUTH_URL;
       if (process.env.NEON_DATA_API_URL) dataApiUrl = process.env.NEON_DATA_API_URL;
       if (process.env.VERCEL_BLOB_READ_WRITE_TOKEN) blobToken = process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+      if (process.env.NEXT_PUBLIC_APP_URL) appUrl = process.env.NEXT_PUBLIC_APP_URL;
+      else if (process.env.APP_URL) appUrl = process.env.APP_URL;
+      else if (process.env.VERCEL_PROJECT_PRODUCTION_URL) appUrl = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+      else if (process.env.VERCEL_URL) appUrl = `https://${process.env.VERCEL_URL}`;
       try {
         const fs = process.getBuiltinModule ? process.getBuiltinModule("fs") : void 0;
         const path = process.getBuiltinModule ? process.getBuiltinModule("path") : void 0;
@@ -38696,6 +38726,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
                 if (key === "NEON_AUTH_URL" && val) authUrl = val;
                 if (key === "NEON_DATA_API_URL" && val) dataApiUrl = val;
                 if (key === "VERCEL_BLOB_READ_WRITE_TOKEN" && val) blobToken = val;
+                if ((key === "NEXT_PUBLIC_APP_URL" || key === "APP_URL") && val) appUrl = val;
               }
             }
           }
@@ -38703,7 +38734,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       } catch {
       }
     }
-    return { authUrl, dataApiUrl, blobToken };
+    return { authUrl, dataApiUrl, blobToken, appUrl };
   }
   var LOCAL_STORAGE_SESSION_KEY = "neon_auth_session";
   var LOCAL_STORAGE_TOKEN_KEY = "neon_auth_token";
@@ -38712,6 +38743,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     const authUrl = options2?.authUrl || envConfig.authUrl;
     const dataApiUrl = options2?.dataApiUrl || envConfig.dataApiUrl;
     const blobToken = options2?.blobToken || envConfig.blobToken;
+    const appUrl = options2?.appUrl || envConfig.appUrl;
     const allowAnonymous = options2?.allowAnonymous ?? true;
     const rawClient = createClient({
       auth: {
@@ -81554,7 +81586,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       setErrorMessage(null);
       setStatusMessage(null);
       if (typeof window !== "undefined" && window.location.protocol === "file:") {
-        setErrorMessage("Browser memblokir autentikasi dari file://. Harap buka melalui server lokal: http://localhost:3000/admin.html (jalankan: npm run dev)");
+        setErrorMessage("Browser memblokir autentikasi dari file://. Harap buka melalui URL web atau server aplikasi Anda.");
         setIsLoading(false);
         return;
       }
@@ -81566,7 +81598,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         if (res?.error) {
           const msg = res.error?.message || "Login gagal. Periksa kembali email dan password Anda.";
           if (msg.toLowerCase().includes("origin")) {
-            setErrorMessage("Origin tidak diizinkan. Silakan buka melalui http://localhost:3000/admin.html");
+            const currentOrigin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
+            setErrorMessage(`Origin "${currentOrigin}" belum diizinkan oleh server Neon Auth. Harap tambahkan "${currentOrigin}" ke Allowed Origins di Neon Auth Console.`);
           } else {
             setErrorMessage(msg);
           }
@@ -81951,8 +81984,19 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     listeners = /* @__PURE__ */ new Map();
     isConnected = false;
     reconnectTimer = null;
-    constructor(url2 = "ws://localhost:8080") {
-      this.url = url2;
+    constructor(url2) {
+      if (url2) {
+        this.url = url2;
+      } else if (typeof window !== "undefined") {
+        const isHttps = window.location.protocol === "https:";
+        const wsProtocol = isHttps ? "wss:" : "ws:";
+        const host = window.location.host;
+        this.url = window.__ENV__?.NEXT_PUBLIC_REALTIME_WS_URL || `${wsProtocol}//${host}/api/realtime`;
+      } else if (typeof process !== "undefined" && process.env) {
+        this.url = process.env.NEXT_PUBLIC_REALTIME_WS_URL || process.env.REALTIME_WS_URL || "ws://localhost:8080";
+      } else {
+        this.url = "ws://localhost:8080";
+      }
     }
     connect() {
       return new Promise((resolve, reject) => {

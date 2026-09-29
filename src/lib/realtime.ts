@@ -406,8 +406,19 @@ export class RealtimeClient {
   private listeners: Map<string, Set<RealtimeCallback>> = new Map();
   private isConnected = false;
 
-  constructor(url: string = 'ws://localhost:8080') {
-    this.url = url;
+  constructor(url?: string) {
+    if (url) {
+      this.url = url;
+    } else if (typeof window !== 'undefined') {
+      const isHttps = window.location.protocol === 'https:';
+      const wsProtocol = isHttps ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      this.url = (window as any).__ENV__?.NEXT_PUBLIC_REALTIME_WS_URL || `${wsProtocol}//${host}/api/realtime`;
+    } else if (typeof process !== 'undefined' && process.env) {
+      this.url = process.env.NEXT_PUBLIC_REALTIME_WS_URL || process.env.REALTIME_WS_URL || 'ws://localhost:8080';
+    } else {
+      this.url = 'ws://localhost:8080';
+    }
   }
 
   public connect(): Promise<void> {

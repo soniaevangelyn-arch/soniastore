@@ -22,12 +22,45 @@ export const NEON_AUTH_URL = 'https://ep-lingering-bird-b587vms2.neonauth.c-7.us
 export const VERCEL_BLOB_TOKEN = 'vercel_blob_rw_D13YMXPZVpuEHykD_mfsMybgl4xrXWWBAtMpY0NlfVWUwYR';
 
 // Pastikan lingkungan Node.js memiliki header Origin default untuk Better Auth dan retry transient
+/**
+ * Mendapatkan Base URL aplikasi secara dinamis (Production Vercel vs Localhost)
+ */
+export function getAppUrl(): string {
+  // 1. Browser runtime: gunakan window.location.origin
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    if (window.location.protocol !== 'file:') {
+      return window.location.origin;
+    }
+  }
+
+  // 2. Global runtime override (misal window.__ENV__)
+  if (typeof window !== 'undefined') {
+    const win = window as any;
+    if (win.__ENV__?.NEXT_PUBLIC_APP_URL) return win.__ENV__.NEXT_PUBLIC_APP_URL;
+    if (win.__ENV__?.APP_URL) return win.__ENV__.APP_URL;
+  }
+
+  // 3. Node.js / Vercel Edge / Serverless runtime
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+    if (process.env.APP_URL) return process.env.APP_URL;
+    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+      return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+    }
+    if (process.env.VERCEL_URL) {
+      return `https://${process.env.VERCEL_URL}`;
+    }
+  }
+
+  return 'http://localhost:3000';
+}
+
 if (typeof window === 'undefined' && typeof globalThis !== 'undefined' && globalThis.fetch) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async function (input: any, init?: any) {
     const headers = new Headers(init?.headers || {});
     if (!headers.has('Origin') && !headers.has('origin')) {
-      headers.set('Origin', 'http://localhost:3000');
+      headers.set('Origin', getAppUrl());
     }
     const modifiedInit = { ...init, headers };
     try {
@@ -45,10 +78,11 @@ if (typeof window === 'undefined' && typeof globalThis !== 'undefined' && global
 /**
  * Membaca konfigurasi runtime (Node.js process.env atau browser window / fallback)
  */
-export function getEnvConfig(): { authUrl: string; dataApiUrl: string; blobToken: string } {
+export function getEnvConfig(): { authUrl: string; dataApiUrl: string; blobToken: string; appUrl: string } {
   let authUrl = NEON_AUTH_URL;
   let dataApiUrl = NEON_DATA_API_URL;
   let blobToken = VERCEL_BLOB_TOKEN;
+  let appUrl = getAppUrl();
 
   // 1. Cek browser global (jika diset via window.__ENV__)
   if (typeof window !== 'undefined') {
@@ -56,6 +90,8 @@ export function getEnvConfig(): { authUrl: string; dataApiUrl: string; blobToken
     if (win.__ENV__?.NEON_AUTH_URL) authUrl = win.__ENV__.NEON_AUTH_URL;
     if (win.__ENV__?.NEON_DATA_API_URL) dataApiUrl = win.__ENV__.NEON_DATA_API_URL;
     if (win.__ENV__?.VERCEL_BLOB_READ_WRITE_TOKEN) blobToken = win.__ENV__.VERCEL_BLOB_READ_WRITE_TOKEN;
+    if (win.__ENV__?.NEXT_PUBLIC_APP_URL) appUrl = win.__ENV__.NEXT_PUBLIC_APP_URL;
+    else if (win.__ENV__?.APP_URL) appUrl = win.__ENV__.APP_URL;
   }
 
   // 2. Cek process.env jika di lingkungan Node.js
@@ -63,6 +99,10 @@ export function getEnvConfig(): { authUrl: string; dataApiUrl: string; blobToken
     if (process.env.NEON_AUTH_URL) authUrl = process.env.NEON_AUTH_URL;
     if (process.env.NEON_DATA_API_URL) dataApiUrl = process.env.NEON_DATA_API_URL;
     if (process.env.VERCEL_BLOB_READ_WRITE_TOKEN) blobToken = process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
+    if (process.env.NEXT_PUBLIC_APP_URL) appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    else if (process.env.APP_URL) appUrl = process.env.APP_URL;
+    else if (process.env.VERCEL_PROJECT_PRODUCTION_URL) appUrl = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+    else if (process.env.VERCEL_URL) appUrl = `https://${process.env.VERCEL_URL}`;
 
     // Optional: jika ada file .env.migration, baca secara dinamis tanpa static import
     try {
@@ -85,6 +125,7 @@ export function getEnvConfig(): { authUrl: string; dataApiUrl: string; blobToken
               if (key === 'NEON_AUTH_URL' && val) authUrl = val;
               if (key === 'NEON_DATA_API_URL' && val) dataApiUrl = val;
               if (key === 'VERCEL_BLOB_READ_WRITE_TOKEN' && val) blobToken = val;
+              if ((key === 'NEXT_PUBLIC_APP_URL' || key === 'APP_URL') && val) appUrl = val;
             }
           }
         }
@@ -94,7 +135,7 @@ export function getEnvConfig(): { authUrl: string; dataApiUrl: string; blobToken
     }
   }
 
-  return { authUrl, dataApiUrl, blobToken };
+  return { authUrl, dataApiUrl, blobToken, appUrl };
 }
 
 export interface StorageUploadResult {
@@ -171,6 +212,7 @@ export interface NeonClientOptions {
   authUrl?: string;
   dataApiUrl?: string;
   blobToken?: string;
+  appUrl?: string;
   allowAnonymous?: boolean;
 }
 
@@ -185,6 +227,7 @@ export function createNeonClient(options?: NeonClientOptions) {
   const authUrl = options?.authUrl || envConfig.authUrl;
   const dataApiUrl = options?.dataApiUrl || envConfig.dataApiUrl;
   const blobToken = options?.blobToken || envConfig.blobToken;
+  const appUrl = options?.appUrl || envConfig.appUrl;
   const allowAnonymous = options?.allowAnonymous ?? true;
 
   // Inisialisasi klien @neondatabase/neon-js dengan BetterAuthVanillaAdapter

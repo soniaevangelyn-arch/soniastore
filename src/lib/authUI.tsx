@@ -72,7 +72,7 @@ export const BetterAuthCard: React.FC<{
 
     // Deteksi protokol file://
     if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
-      setErrorMessage('Browser memblokir autentikasi dari file://. Harap buka melalui server lokal: http://localhost:3000/admin.html (jalankan: npm run dev)');
+      setErrorMessage('Browser memblokir autentikasi dari file://. Harap buka melalui URL web atau server aplikasi Anda.');
       setIsLoading(false);
       return;
     }
@@ -86,7 +86,8 @@ export const BetterAuthCard: React.FC<{
       if (res?.error) {
         const msg = (res.error as any)?.message || 'Login gagal. Periksa kembali email dan password Anda.';
         if (msg.toLowerCase().includes('origin')) {
-          setErrorMessage('Origin tidak diizinkan. Silakan buka melalui http://localhost:3000/admin.html');
+          const currentOrigin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '';
+          setErrorMessage(`Origin "${currentOrigin}" belum diizinkan oleh server Neon Auth. Harap tambahkan "${currentOrigin}" ke Allowed Origins di Neon Auth Console.`);
         } else {
           setErrorMessage(msg);
         }

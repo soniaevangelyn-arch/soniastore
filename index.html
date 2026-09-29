@@ -210,15 +210,17 @@
 
     <script>
         // ====== KONFIGURASI NEON DATABASE & DATA API ======
-        const NEON_DATA_API_URL = "https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1";
-        const NEON_AUTH_URL = "https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth";
+        const NEON_DATA_API_URL = (window.__ENV__ && window.__ENV__.NEON_DATA_API_URL) || "https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1";
+        const NEON_AUTH_URL = (window.__ENV__ && window.__ENV__.NEON_AUTH_URL) || "https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth";
+        const APP_URL = (window.__ENV__ && (window.__ENV__.NEXT_PUBLIC_APP_URL || window.__ENV__.APP_URL)) || (window.location.protocol !== 'file:' ? window.location.origin : 'http://localhost:3000');
         const STORAGE_BUCKET = "product-images";
         // =================================================
 
         // Inisialisasi klien Neon (@neondatabase/neon-js)
         const neon = window.neon || window.createNeonClient({
             dataApiUrl: NEON_DATA_API_URL,
-            authUrl: NEON_AUTH_URL
+            authUrl: NEON_AUTH_URL,
+            appUrl: APP_URL
         });
         const client = neon;
         

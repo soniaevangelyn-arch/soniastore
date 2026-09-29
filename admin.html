@@ -43,7 +43,9 @@
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
     <script>
-        // Auto-redirect dari 127.0.0.1 ke localhost (karena server Neon Auth hanya mengizinkan localhost)
+        // Support runtime injection of environment variables
+        window.__ENV__ = window.__ENV__ || {};
+        // Auto-redirect jika user mengakses via 127.0.0.1 (Live Server default) ke localhost saat development
         if (window.location.hostname === '127.0.0.1') {
             window.location.href = window.location.href.replace('127.0.0.1', 'localhost');
         }
@@ -62,9 +64,8 @@
                 Halaman ini dibuka langsung via <b>file://</b>. Server autentikasi menolak request tanpa Web Origin yang valid.
             </p>
             <div class="bg-white/90 p-3 rounded-xl border border-amber-200 text-xs text-dark-blue">
-                <div>👉 <b>Buka melalui server lokal:</b></div>
-                <div class="mt-1 font-mono text-xs bg-blue-50 p-2 rounded border border-blue-100 font-bold">npm run dev</div>
-                <div class="mt-1.5">Lalu akses di browser: <br/><a href="http://localhost:3000/admin.html" class="underline font-bold text-blue-600">http://localhost:3000/admin.html</a></div>
+                <div>👉 <b>Harap buka melalui URL Web yang valid:</b></div>
+                <div class="mt-1 text-xs text-gray-700">Akses melalui domain Vercel Anda (misal: <code>https://your-domain.vercel.app/admin.html</code>) atau jalankan server lokal saat development.</div>
             </div>
         </div>
 
@@ -396,15 +397,17 @@
 
     <script>
         // ====== KONFIGURASI NEON DATABASE & DATA API ======
-        const NEON_DATA_API_URL = "https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1";
-        const NEON_AUTH_URL = "https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth";
+        const NEON_DATA_API_URL = (window.__ENV__ && window.__ENV__.NEON_DATA_API_URL) || "https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1";
+        const NEON_AUTH_URL = (window.__ENV__ && window.__ENV__.NEON_AUTH_URL) || "https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth";
+        const APP_URL = (window.__ENV__ && (window.__ENV__.NEXT_PUBLIC_APP_URL || window.__ENV__.APP_URL)) || (window.location.protocol !== 'file:' ? window.location.origin : 'http://localhost:3000');
         const STORAGE_BUCKET = "product-images";
         // =================================================
 
         // Inisialisasi klien Neon (@neondatabase/neon-js)
         const neon = window.neon || window.createNeonClient({
             dataApiUrl: NEON_DATA_API_URL,
-            authUrl: NEON_AUTH_URL
+            authUrl: NEON_AUTH_URL,
+            appUrl: APP_URL
         });
         const client = neon;
 
