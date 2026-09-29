@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --port 3000 --host localhost",
     "serve": "vite --port 3000 --host localhost",
-    "build:client": "esbuild src/index.ts --bundle --format=iife --global-name=NeonBundle --outfile=dist/neon.browser.js --platform=browser --define:process.env.NODE_ENV=\\\"production\\\"",
+    "build": "npm run build:client && vite build",
+    "build:client": "esbuild src/index.ts --bundle --format=iife --global-name=NeonBundle --outfile=dist/neon.browser.js --platform=browser --define:process.env.NODE_ENV=\\\"production\\\" && node -e \"import('fs').then(fs => { fs.copyFileSync('dist/neon.browser.js', 'public/dist/neon.browser.js'); fs.copyFileSync('dist/neon.browser.js', 'public/neon.browser.js'); })\"",
     "typecheck": "tsc --noEmit",
     "export:users": "node export_supabase_users.ts",
     "import:users": "node import_neon_users.ts",

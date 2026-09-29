@@ -230,26 +230,25 @@ Setelah migrasi auth, akun administrator telah terdaftar di Neon Managed Better 
 ### A. Environment Variables di Dashboard Vercel
 Tambahkan variabel berikut di **Project Settings > Environment Variables** di Vercel:
 
-| Nama Variable | Deskripsi / Nilai Contoh | Lingkungan |
+| Nama Variable | Deskripsi / Nilai | Lingkungan |
 | :--- | :--- | :---: |
-| `NEXT_PUBLIC_APP_URL` | URL domain production Anda, misal `https://sonia-beauty.vercel.app` | Production, Preview |
-| `APP_URL` | Sama dengan `NEXT_PUBLIC_APP_URL` | Production, Preview |
-| `NEON_DATABASE_URL` | URL PostgreSQL Neon (`postgresql://neondb_owner:...`) | Production, Preview, Dev |
-| `NEON_DATA_API_URL` | Endpoint PostgREST Neon Data API | Production, Preview, Dev |
-| `NEON_AUTH_URL` | Endpoint Neon Managed Better Auth | Production, Preview, Dev |
-| `NEON_AUTH_PROJECT_ID` | ID Project Neon Auth (`nameless-tree-27694734`) | Production, Preview, Dev |
-| `NEON_AUTH_SERVER_KEY` | Endpoint JWKS Server Key Neon Auth | Production, Preview, Dev |
-| `VERCEL_BLOB_READ_WRITE_TOKEN` | Read-Write Token dari Vercel Blob Storage | Production, Preview, Dev |
+| `NEXT_PUBLIC_APP_URL` | `https://soniastore.vercel.app` | Production, Preview |
+| `APP_URL` | `https://soniastore.vercel.app` | Production, Preview |
+| `NEON_DATABASE_URL` | `postgresql://neondb_owner:npg_NCyDSE0s2KqO@ep-lingering-bird-b587vms2-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require` | Production, Preview, Dev |
+| `NEON_DATA_API_URL` | `https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1` | Production, Preview, Dev |
+| `NEON_AUTH_URL` | `https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth` | Production, Preview, Dev |
+| `NEON_AUTH_PROJECT_ID` | `nameless-tree-27694734` | Production, Preview, Dev |
+| `NEON_AUTH_SERVER_KEY` | `https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth/.well-known/jwks.json` | Production, Preview, Dev |
+| `VERCEL_BLOB_READ_WRITE_TOKEN` | `vercel_blob_rw_D13YMXPZVpuEHykD_mfsMybgl4xrXWWBAtMpY0NlfVWUwYR` | Production, Preview, Dev |
 
 ### B. Konfigurasi Allowed Origins di Neon Auth Console (Kritis)
 Karena Better Auth menerapkan perlindungan Origin/CORS dan anti-CSRF, server Neon Auth hanya menerima permintaan dari domain yang telah didaftarkan:
 1. Masuk ke [Neon Console](https://console.neon.tech).
 2. Pilih project database Anda > Masuk ke tab **Auth (Better Auth)** > **Settings**.
 3. Di bagian **Allowed Origins / Trusted Origins**, tambahkan:
-   - `https://your-domain.vercel.app` (URL deployment Vercel Anda)
-   - `https://your-custom-domain.com` (jika menggunakan custom domain)
+   - `https://soniastore.vercel.app`
    - `http://localhost:3000` (untuk pengujian lokal)
 4. Di bagian **Redirect URLs**, pastikan menyertakan:
-   - `https://your-domain.vercel.app/admin.html`
-   - `https://your-domain.vercel.app/`
+   - `https://soniastore.vercel.app/admin.html`
+   - `https://soniastore.vercel.app/`
 5. Simpan perubahan. Permintaan login dari domain Vercel Anda sekarang akan otomatis diterima dan tidak akan ditolak dengan error `403 Invalid origin`.
