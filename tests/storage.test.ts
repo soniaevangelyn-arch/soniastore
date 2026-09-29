@@ -43,7 +43,7 @@ describe('Vercel Blob Storage - Unit & Integration Tests', () => {
 
     expect(result).toBeDefined();
     expect(result.pathname).toBe(testPathname);
-    expect(result.url).toContain(testFileName);
+    expect(result.url).toContain(`test-run-`);
     expect(result.downloadUrl).toContain('?download=1');
 
     uploadedUrl = result.url;

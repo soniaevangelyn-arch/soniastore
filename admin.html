@@ -1177,7 +1177,7 @@
             const pathname = `${STORAGE_BUCKET}/${fileName}`;
 
             if (window.VercelBlob && window.VercelBlob.uploadFile) {
-                const res = await window.VercelBlob.uploadFile(pathname, file, { addRandomSuffix: false });
+                const res = await window.VercelBlob.uploadFile(pathname, file);
                 return res.url;
             }
 

@@ -166,12 +166,18 @@ export function createStorageAdapter(blobToken: string = VERCEL_BLOB_TOKEN) {
           const pathname = `${bucket}/${filePath.replace(/^\/+/, '')}`;
           const uploadUrl = `https://blob.vercel-storage.com/${pathname}`;
 
+          const headers: Record<string, string> = {
+            'authorization': `Bearer ${blobToken}`
+          };
+          if (typeof File !== 'undefined' && file instanceof File && file.type) {
+            headers['content-type'] = file.type;
+          } else if (typeof Blob !== 'undefined' && file instanceof Blob && file.type) {
+            headers['content-type'] = file.type;
+          }
+
           const res = await fetch(uploadUrl, {
             method: 'PUT',
-            headers: {
-              'authorization': `Bearer ${blobToken}`,
-              'x-add-random-suffix': 'false'
-            },
+            headers,
             body: file as any
           });
 

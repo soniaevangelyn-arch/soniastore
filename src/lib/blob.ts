@@ -92,8 +92,7 @@ export async function uploadFile(
   const uploadEndpoint = `https://blob.vercel-storage.com/${cleanPath}`;
 
   const headers: Record<string, string> = {
-    'authorization': `Bearer ${token}`,
-    'x-add-random-suffix': addSuffix
+    'authorization': `Bearer ${token}`
   };
 
   if (options?.contentType) {

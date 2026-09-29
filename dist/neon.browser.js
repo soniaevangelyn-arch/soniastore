@@ -38499,8 +38499,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
     const addSuffix = options2?.addRandomSuffix ? "true" : "false";
     const uploadEndpoint = `https://blob.vercel-storage.com/${cleanPath}`;
     const headers = {
-      "authorization": `Bearer ${token}`,
-      "x-add-random-suffix": addSuffix
+      "authorization": `Bearer ${token}`
     };
     if (options2?.contentType) {
       headers["content-type"] = options2.contentType;
