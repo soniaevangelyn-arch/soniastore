@@ -10,8 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Neon SDK (@neondatabase/neon-js & @neondatabase/auth-ui) -->
+    <link rel="stylesheet" href="./dist/auth-ui.css">
+    <script src="./dist/neon.browser.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- PapaParse for CSV -->
@@ -41,29 +42,38 @@
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
+    <script>
+        // Auto-redirect dari 127.0.0.1 ke localhost (karena server Neon Auth hanya mengizinkan localhost)
+        if (window.location.hostname === '127.0.0.1') {
+            window.location.href = window.location.href.replace('127.0.0.1', 'localhost');
+        }
+    </script>
 </head>
 <body class="min-h-screen flex flex-col md:flex-row">
 
-    <!-- Login Screen -->
-    <div id="loginScreen" class="fixed inset-0 bg-[#EAF3FF] z-50 flex items-center justify-center">
-        <div class="bg-white p-8 md:p-10 rounded-[24px] shadow-xl w-full max-w-md mx-4 border-2 border-white">
-            <h2 class="text-3xl font-heading font-bold text-center text-dark-blue mb-2">Admin Login</h2>
-            <p class="text-gray-500 text-center mb-8 font-medium">Selamat datang di Sonia Store 💙</p>
-            <div id="loginError" class="hidden bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm mb-6 font-semibold"></div>
-            
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="mb-5">
-                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Email</label>
-                    <input type="email" id="email" required class="w-full px-4 py-3 border-2 border-blue-50 rounded-2xl focus:outline-none focus:border-blue-300 bg-blue-50/30 text-dark-blue font-semibold transition-colors">
-                </div>
-                <div class="mb-8">
-                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Password</label>
-                    <input type="password" id="password" required class="w-full px-4 py-3 border-2 border-blue-50 rounded-2xl focus:outline-none focus:border-blue-300 bg-blue-50/30 text-dark-blue font-semibold transition-colors">
-                </div>
-                <button type="submit" id="loginBtn" class="w-full bg-dark-blue hover:bg-dark-blue-hover text-white font-bold py-3.5 rounded-2xl transition-colors shadow-lg shadow-blue-200">
-                    Login 🚀
-                </button>
-            </form>
+    <!-- Login Screen (Powered by Better Auth UI: @neondatabase/auth-ui) -->
+    <div id="loginScreen" class="fixed inset-0 bg-[#EAF3FF] z-50 flex flex-col items-center justify-center p-4 overflow-y-auto">
+        <!-- Peringatan jika dibuka via file:/// -->
+        <div id="fileProtocolAlert" class="hidden w-full max-w-md mb-4 bg-amber-50 border-2 border-amber-300 text-amber-900 p-4 rounded-2xl shadow-md text-sm">
+            <div class="flex items-center gap-2 font-bold mb-1 text-amber-800">
+                <span class="text-xl">⚠️</span> Peringatan Membuka File Direct
+            </div>
+            <p class="text-xs text-amber-800 leading-relaxed mb-2 font-medium">
+                Halaman ini dibuka langsung via <b>file://</b>. Server autentikasi menolak request tanpa Web Origin yang valid.
+            </p>
+            <div class="bg-white/90 p-3 rounded-xl border border-amber-200 text-xs text-dark-blue">
+                <div>👉 <b>Buka melalui server lokal:</b></div>
+                <div class="mt-1 font-mono text-xs bg-blue-50 p-2 rounded border border-blue-100 font-bold">npm run dev</div>
+                <div class="mt-1.5">Lalu akses di browser: <br/><a href="http://localhost:3000/admin.html" class="underline font-bold text-blue-600">http://localhost:3000/admin.html</a></div>
+            </div>
+        </div>
+
+        <div id="authMountPoint" class="w-full max-w-md my-auto">
+            <!-- Rendered dynamically via Better Auth UI -->
+            <div class="text-center p-8 bg-white rounded-2xl shadow-lg border border-blue-50">
+                <p class="text-dark-blue font-bold text-lg mb-2">Memuat Autentikasi... ⏳</p>
+                <p class="text-gray-400 text-sm">Menghubungkan ke Neon Managed Better Auth</p>
+            </div>
         </div>
     </div>
 
@@ -100,8 +110,14 @@
     <main id="mainContent" class="flex-grow hidden flex-col h-screen overflow-y-auto bg-[#FDFBF7]">
         <!-- Topbar -->
         <header class="bg-white shadow-sm p-4 px-6 flex justify-between items-center sticky top-0 z-10">
-            <h2 class="text-lg md:text-xl font-bold text-dark-blue font-heading">Halo, Admin 👋</h2>
-            <button onclick="handleLogout()" class="text-sm bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2 rounded-full font-bold transition-colors">Logout</button>
+            <h2 class="text-lg md:text-xl font-bold text-dark-blue font-heading flex items-center gap-2">
+                <span>Halo, Admin</span> <span id="headerAdminEmail" class="text-xs font-semibold text-gray-500 hidden md:inline"></span> 👋
+            </h2>
+            <div id="userHeaderMountPoint">
+                <button onclick="handleLogout()" class="text-sm bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2 rounded-full font-bold transition-colors flex items-center gap-1.5 shadow-sm">
+                    <span>🚪</span> <span>Logout</span>
+                </button>
+            </div>
         </header>
 
         <div class="p-6 md:p-8">
@@ -379,13 +395,18 @@
     </div>
 
     <script>
-        // ====== ISI DENGAN DATA SUPABASE KAMU ======
-        const SUPABASE_URL = "https://uzezdoaunstiwmiejqvo.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_8N6DATKw4jpw7L-cBpCNKQ_eQNS0ji1";
+        // ====== KONFIGURASI NEON DATABASE & DATA API ======
+        const NEON_DATA_API_URL = "https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1";
+        const NEON_AUTH_URL = "https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth";
         const STORAGE_BUCKET = "product-images";
-        // ==========================================
+        // =================================================
 
-        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Inisialisasi klien Neon (@neondatabase/neon-js)
+        const neon = window.neon || window.createNeonClient({
+            dataApiUrl: NEON_DATA_API_URL,
+            authUrl: NEON_AUTH_URL
+        });
+        const client = neon;
 
         // Sanitasi teks untuk mencegah serangan XSS di Dashboard Admin
         function escapeHTML(str) {
@@ -399,49 +420,107 @@
         }
 
         let productsData = [];
+        let currentSession = null;
+        let currentUser = null;
 
-        // --- AUTH LOGIC ---
+        // --- BETTER AUTH LOGIC (@neondatabase/auth-ui) ---
         async function checkSession() {
-            const { data: { session } } = await client.auth.getSession();
-            if (session) {
-                showSection('products');
-            } else {
+            if (window.location.protocol === 'file:') {
+                const alertEl = document.getElementById('fileProtocolAlert');
+                if (alertEl) alertEl.classList.remove('hidden');
+            }
+
+            // Render komponen Better Auth UI di #loginScreen
+            renderAuthUI();
+
+            // Verifikasi sesi aktif via Better Auth getSession
+            try {
+                const sessionRes = await client.auth.getSession();
+                const session = sessionRes?.data?.session || sessionRes?.data?.user;
+                if (session) {
+                    currentSession = session;
+                    currentUser = sessionRes?.data?.user || (typeof session === 'object' ? session : null);
+                    updateAdminHeader();
+                    showSection('products');
+                } else {
+                    currentSession = null;
+                    currentUser = null;
+                    showLogin();
+                }
+            } catch (err) {
+                console.warn('[BetterAuth] Error cek sesi:', err);
                 showLogin();
             }
 
-            client.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_IN') showSection('products');
-                if (event === 'SIGNED_OUT') showLogin();
-            });
+            // Daftarkan listener perubahan status auth (login / logout)
+            if (client.auth.onAuthStateChange) {
+                client.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_IN') {
+                        currentSession = session;
+                        currentUser = session?.user || session;
+                        updateAdminHeader();
+                        showSection('products');
+                    }
+                    if (event === 'SIGNED_OUT') {
+                        currentSession = null;
+                        currentUser = null;
+                        showLogin();
+                    }
+                });
+            }
         }
 
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const btn = document.getElementById('loginBtn');
-            const errorDiv = document.getElementById('loginError');
-            
-            btn.innerHTML = 'Login... ⏳';
-            btn.disabled = true;
-            errorDiv.classList.add('hidden');
+        function renderAuthUI() {
+            const mountPoint = document.getElementById('authMountPoint');
+            if (!mountPoint) return;
 
-            const { data, error } = await client.auth.signInWithPassword({ email, password });
-            
-            if (error) {
-                errorDiv.textContent = error.message;
-                errorDiv.classList.remove('hidden');
-                btn.innerHTML = 'Login 🚀';
-                btn.disabled = false;
-            } else {
-                btn.innerHTML = 'Login 🚀';
-                btn.disabled = false;
-                showSection('products');
+            const mountFn = window.mountBetterAuthUI || (window.NeonBundle && window.NeonBundle.mountBetterAuthUI);
+            if (typeof mountFn === 'function') {
+                mountFn(mountPoint, {
+                    initialMode: 'sign-in',
+                    onSuccess: (sessionData) => {
+                        currentSession = sessionData?.session || sessionData;
+                        currentUser = sessionData?.user || currentSession;
+                        updateAdminHeader();
+                        showSection('products');
+                    }
+                });
+            }
+        }
+
+        function updateAdminHeader() {
+            const emailSpan = document.getElementById('headerAdminEmail');
+            if (emailSpan && currentUser && currentUser.email) {
+                emailSpan.textContent = `(${currentUser.email})`;
+                emailSpan.classList.remove('hidden');
+            }
+
+            const userHeaderPoint = document.getElementById('userHeaderMountPoint');
+            if (userHeaderPoint) {
+                const mountHeaderFn = window.mountBetterAuthUserHeader || (window.NeonBundle && window.NeonBundle.mountBetterAuthUserHeader);
+                if (typeof mountHeaderFn === 'function') {
+                    mountHeaderFn(userHeaderPoint, {
+                        userEmail: currentUser?.email,
+                        onLogout: () => {
+                            currentSession = null;
+                            currentUser = null;
+                            showLogin();
+                        }
+                    });
+                }
             }
         }
 
         async function handleLogout() {
-            await client.auth.signOut();
+            try {
+                await client.auth.signOut();
+            } catch (err) {
+                console.error('[BetterAuth] Logout error:', err);
+            } finally {
+                currentSession = null;
+                currentUser = null;
+                showLogin();
+            }
         }
 
         function showLogin() {
@@ -449,9 +528,16 @@
             document.getElementById('sidebar').classList.add('hidden');
             document.getElementById('mainContent').classList.add('hidden');
             document.getElementById('mainContent').classList.remove('flex');
+            renderAuthUI();
         }
 
         function showSection(section) {
+            // Proteksi Route: Tolak akses jika tidak ada sesi Better Auth aktif
+            if (!currentSession) {
+                showLogin();
+                return;
+            }
+
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('sidebar').classList.remove('hidden');
             document.getElementById('sidebar').classList.add('flex');
@@ -614,7 +700,7 @@
                     }
 
                     document.getElementById('tableLoading').classList.remove('hidden');
-                    document.getElementById('tableLoading').innerText = "Sedang mengimpor data ke Supabase... Mohon tunggu ⏳";
+                    document.getElementById('tableLoading').innerText = "Sedang mengimpor data ke Neon Database... Mohon tunggu ⏳";
                     document.getElementById('tableEmpty').classList.add('hidden');
                     document.getElementById('productTableBody').innerHTML = '';
 
@@ -941,19 +1027,19 @@
         async function uploadAudio(file) {
             const fileExt = file.name.split('.').pop();
             const fileName = `bgm_${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
+            const pathname = `music-files/${fileName}`;
 
-            const { error: uploadError } = await client.storage
+            if (window.VercelBlob && window.VercelBlob.uploadFile) {
+                const res = await window.VercelBlob.uploadFile(pathname, file, { addRandomSuffix: false });
+                return res.url;
+            }
+
+            const { data, error } = await client.storage
                 .from('music-files')
-                .upload(filePath, file);
+                .upload(fileName, file);
 
-            if (uploadError) throw uploadError;
-
-            const { data } = client.storage
-                .from('music-files')
-                .getPublicUrl(filePath);
-                
-            return data.publicUrl;
+            if (error) throw error;
+            return data.url || client.storage.from('music-files').getPublicUrl(fileName).data.publicUrl;
         }
 
         async function saveSettings(e) {
@@ -1084,20 +1170,20 @@
 
         async function uploadGambar(file) {
             const fileExt = file.name.split('.').pop();
-            const fileName = `${Math.random()}.${fileExt}`;
-            const filePath = `${fileName}`;
+            const fileName = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+            const pathname = `${STORAGE_BUCKET}/${fileName}`;
 
-            const { error: uploadError } = await client.storage
+            if (window.VercelBlob && window.VercelBlob.uploadFile) {
+                const res = await window.VercelBlob.uploadFile(pathname, file, { addRandomSuffix: false });
+                return res.url;
+            }
+
+            const { data, error } = await client.storage
                 .from(STORAGE_BUCKET)
-                .upload(filePath, file);
+                .upload(fileName, file);
 
-            if (uploadError) throw uploadError;
-
-            const { data } = client.storage
-                .from(STORAGE_BUCKET)
-                .getPublicUrl(filePath);
-                
-            return data.publicUrl;
+            if (error) throw error;
+            return data.url || client.storage.from(STORAGE_BUCKET).getPublicUrl(fileName).data.publicUrl;
         }
 
         async function saveProduct(e) {
@@ -1149,9 +1235,22 @@
 
         async function deleteProduct(id) {
             if (confirm("Yakin mau hapus produk ini?")) {
+                const p = productsData.find(x => x.id == id);
                 const { error } = await client.from('products').delete().eq('id', id);
-                if (error) alert("Error hapus produk: " + error.message);
-                else loadAdminProducts();
+                if (error) {
+                    alert("Error hapus produk: " + error.message);
+                } else {
+                    if (p && p.image_url && p.image_url.includes('blob.vercel-storage.com')) {
+                        try {
+                            if (window.VercelBlob && window.VercelBlob.deleteFile) {
+                                await window.VercelBlob.deleteFile(p.image_url);
+                            }
+                        } catch (e) {
+                            console.warn('Gagal hapus file blob:', e);
+                        }
+                    }
+                    loadAdminProducts();
+                }
             }
         }
 

@@ -16,8 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Neon SDK (@neondatabase/neon-js) -->
+    <script src="./dist/neon.browser.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -209,13 +209,18 @@
 
 
     <script>
-        // ====== ISI DENGAN DATA SUPABASE KAMU ======
-        const SUPABASE_URL = "https://uzezdoaunstiwmiejqvo.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_8N6DATKw4jpw7L-cBpCNKQ_eQNS0ji1";
+        // ====== KONFIGURASI NEON DATABASE & DATA API ======
+        const NEON_DATA_API_URL = "https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1";
+        const NEON_AUTH_URL = "https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth";
         const STORAGE_BUCKET = "product-images";
-        // ==========================================
+        // =================================================
 
-        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Inisialisasi klien Neon (@neondatabase/neon-js)
+        const neon = window.neon || window.createNeonClient({
+            dataApiUrl: NEON_DATA_API_URL,
+            authUrl: NEON_AUTH_URL
+        });
+        const client = neon;
         
         // --- KEAMANAN & PROTEKSI WEBSITE (XSS & ANTI-CLICKJACKING) ---
         // 1. Anti-Clickjacking: Cegah website dibuka diam-diam di dalam iframe situs lain
