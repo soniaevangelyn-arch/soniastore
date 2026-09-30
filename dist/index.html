@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sonia Store - Temukan koleksi pilihan cantik, skincare, tumbler, dan aksesoris terbaik dengan harga spesial. Belanja aman dan terpercaya.">
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Sonia Store - Koleksi Pilihan Cantik Untukmu</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Neon SDK (@neondatabase/neon-js) -->
+    <script src="./dist/neon.browser.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'soft-blue-bg': '#EAF3FF',
+                        'dark-blue': '#1A5F9E',
+                        'dark-blue-hover': '#134B80',
+                        'card-white': '#FFFFFF'
+                    },
+                    fontFamily: {
+                        heading: ['"Fredoka"', 'sans-serif'],
+                        body: ['"Quicksand"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>body{color:#333;background-color:#eaf3ff;font-family:Quicksand,sans-serif}h1,h2,h3,.font-heading{font-family:"\"Fredoka\"",sans-serif}.btn-pill{border-radius:9999px;transition:all .2s}.btn-active{color:#fff;background-color:#1a5f9e;border:2px solid #1a5f9e}.btn-inactive{color:#1a5f9e;background-color:#fff;border:2px solid #bfdbfe}.btn-inactive:hover{background-color:#eaf3ff;border-color:#93c5fd}.product-card{border-radius:20px;transition:all .3s cubic-bezier(.4,0,.2,1)}.product-card:hover{transform:translateY(-4px);box-shadow:0 12px 24px -8px #1a5f9e26}.line-clamp-2{-webkit-line-clamp:2;-webkit-box-orient:vertical;display:-webkit-box;overflow:hidden}@keyframes float{0%,to{transform:translateY(0)}50%{transform:translateY(-10px)}}.animate-float{animation:4s ease-in-out infinite float}.animate-float-delayed{animation:5s ease-in-out 1s infinite float}@keyframes marquee{0%{transform:translate(100%)}to{transform:translate(-100%)}}.animate-marquee{animation:6s linear infinite marquee}</style>
+</head>
+<body class="min-h-screen flex flex-col relative pb-16 overflow-x-hidden">
+
+    <!-- Background Decor -->
+    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <!-- Wavy shape bottom right -->
+        <svg class="absolute -bottom-20 -right-20 w-[600px] text-blue-200/40 animate-float" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path fill="currentColor" d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,81.1,-46.3C90.4,-33.5,96,-18.1,96.6,-2.4C97.1,13.2,92.6,29,83.9,42.5C75.2,56.1,62.2,67.3,47.8,75.1C33.4,82.8,17.7,87.1,1.5,84.5C-14.7,81.9,-29.3,72.4,-43.3,63.1C-57.3,53.8,-70.6,44.7,-79.8,32.2C-89,19.6,-94.1,3.6,-92,-11.1C-89.9,-25.8,-80.6,-39.3,-69.1,-49C-57.6,-58.7,-43.9,-64.6,-30.5,-72.1C-17.1,-79.6,-4,-88.7,10.2,-87.4C24.4,-86.1,30.5,-83.6,44.7,-76.4Z" transform="translate(100 100)" />
+        </svg>
+        <!-- Wavy shape middle left -->
+        <svg class="absolute top-1/4 -left-40 w-[500px] text-blue-100/60 animate-float-delayed" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path fill="currentColor" d="M39.9,-65.7C54.1,-58.5,69.7,-52.3,80.7,-40.7C91.6,-29,97.9,-11.9,94.2,3.1C90.5,18.1,76.8,31,64.2,42.8C51.6,54.6,40.1,65.3,26,71.7C11.9,78.1,-4.8,80.3,-21.3,77.5C-37.8,74.7,-54.1,66.9,-66.3,54.6C-78.5,42.3,-86.6,25.5,-88.4,8.1C-90.2,-9.3,-85.7,-27.3,-75,-41.2C-64.3,-55.1,-47.4,-65,-31.6,-71C-15.8,-77,-1.1,-79.1,13.1,-75.6C27.3,-72.1,30.5,-63,39.9,-65.7Z" transform="translate(100 100)" />
+        </svg>
+    </div>
+
+    <!-- Music Player (Top Left) -->
+    <!-- Disembunyikan secara default (hidden), akan dimunculkan (flex) via JS jika setting tersedia -->
+    <div id="musicPlayerWidget" class="hidden absolute top-4 left-4 z-40 bg-white/70 backdrop-blur-md px-4 py-2.5 rounded-full shadow-sm items-center gap-3 border border-white hover:bg-white transition-colors cursor-pointer max-w-[200px] md:max-w-[250px]">
+        <div class="w-8 h-8 shrink-0 bg-blue-400 rounded-full flex items-center justify-center text-white text-sm shadow-inner">
+            🎵
+        </div>
+        <div class="text-xs leading-tight pr-2 border-r border-blue-100 overflow-hidden w-20 md:w-28">
+            <div class="font-bold text-dark-blue truncate">Sonia Playlist</div>
+            <div class="text-gray-500 font-medium whitespace-nowrap overflow-hidden relative w-full h-4">
+                <div class="animate-marquee inline-block absolute" id="musicTitleDisplay">BGM Relax</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-1.5 text-dark-blue shrink-0">
+            <button class="hover:text-blue-500 transition px-1">⏮</button>
+            <button id="btnPlayPause" class="hover:text-blue-500 transition px-1 text-lg">▶</button>
+            <button class="hover:text-blue-500 transition px-1">⏭</button>
+        </div>
+        <audio id="bgMusic" loop></audio>
+    </div>
+
+    <!-- Feedback Button (Top Right) -->
+    <div class="absolute top-4 right-4 z-40">
+        <button onclick="document.getElementById('feedbackModal').classList.remove('opacity-0', 'pointer-events-none')" class="bg-white/70 backdrop-blur-md px-4 py-2 rounded-2xl shadow-sm flex items-center gap-3 border border-white hover:bg-white transition-all transform hover:scale-105">
+            <div class="hidden sm:block text-xs text-right">
+                <div class="font-bold text-dark-blue font-heading">Kritik & Saran</div>
+                <div class="text-gray-500 font-medium">Tulis di sini ya! 💖</div>
+            </div>
+            <div class="text-2xl bg-blue-100 p-2 rounded-xl">💌</div>
+        </button>
+    </div>
+
+    <!-- Header -->
+    <header class="text-center pt-28 pb-6 px-4 relative z-10">
+        <div class="flex items-center justify-center gap-3 mb-2">
+            <span class="text-blue-300 font-bold text-xl">✨</span>
+            <h2 class="text-xl md:text-2xl font-heading text-dark-blue font-semibold tracking-wide">Sonia Store</h2>
+            <span class="text-blue-300 font-bold text-xl">✨</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading text-dark-blue font-bold mb-6 flex flex-col items-center justify-center">
+            <span>Silahkan Berbelanja</span>
+        </h1>
+        <p class="text-gray-600 max-w-xl mx-auto text-sm md:text-base font-medium">
+            Kumpulan produk pilihan yang udah terbukti bagus. Tinggal klik, langsung checkout di Shopee ✨
+        </p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 md:px-8 max-w-6xl flex-grow relative z-10">
+        
+        <!-- Navigation Bar (Hamburger, Sort, Search) -->
+        <div class="max-w-2xl mx-auto mb-10 flex flex-row gap-2 md:gap-3 items-center relative z-20">
+            
+            <!-- 1. Hamburger Categories Toggle -->
+            <div class="relative shrink-0">
+                <button id="btnToggleCategories" onclick="toggleCategories()" class="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full shadow-sm text-dark-blue hover:bg-white transition-colors border-2 border-white">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+
+                <!-- Categories Dropdown Box (Absolute overlay) -->
+                <div id="categoryContainer" class="hidden absolute top-full mt-3 left-0 w-[280px] md:w-[320px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-xl border-2 border-white p-5 flex-col gap-4 origin-top-left z-30">
+                    <div class="text-xs font-bold text-gray-400 mb-1 tracking-wider">KATEGORI PRODUK</div>
+                    <!-- Main Categories & Sub Categories (Rendered via JS) -->
+                    <div class="flex flex-col gap-2" id="mainCategories"></div>
+                </div>
+            </div>
+
+            <!-- 2. Sort Button -->
+            <div class="shrink-0 relative w-28 md:w-36">
+                <select id="sortPrice" onchange="handleSort()" class="w-full h-12 md:h-14 px-3 md:px-5 rounded-full border-2 border-white shadow-sm focus:border-dark-blue focus:outline-none text-xs md:text-sm font-semibold bg-white/80 backdrop-blur-md transition-all text-dark-blue appearance-none pr-6 cursor-pointer">
+                    <option value="default">✨ Urutkan</option>
+                    <option value="asc">💸 Termurah</option>
+                    <option value="desc">💎 Termahal</option>
+                </select>
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none text-[10px] md:text-xs">▼</span>
+            </div>
+
+            <!-- 3. Search Bar -->
+            <div class="relative group flex-grow">
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Cari..." class="w-full h-12 md:h-14 px-4 md:px-6 rounded-full border-2 border-white shadow-sm focus:border-dark-blue focus:outline-none text-sm font-semibold bg-white/80 backdrop-blur-md transition-all text-dark-blue placeholder-blue-300">
+                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-dark-blue transition-colors text-sm md:text-lg">🔍</span>
+            </div>
+            
+        </div>
+
+        <!-- Products Grid -->
+        <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-3 md:gap-3.5 relative z-10 pb-8">
+            <!-- Rendered via JS -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-20 text-dark-blue">
+            <svg class="animate-spin h-10 w-10 mx-auto mb-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="font-bold text-lg font-heading">Memuat produk cantik...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-20 hidden">
+            <div class="text-5xl mb-4">☁️</div>
+            <p class="text-dark-blue font-bold font-heading text-xl mb-1">Yah, belum ketemu!</p>
+            <p class="text-gray-500 font-medium">Coba cari dengan kata kunci lain atau pilih kategori lain.</p>
+        </div>
+
+    </main>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-dark-blue/20 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white w-full max-w-md m-4 rounded-[24px] shadow-2xl p-6 md:p-8 relative transform transition-transform">
+            <button onclick="closeFeedback()" class="absolute top-4 right-5 text-blue-200 hover:text-dark-blue text-3xl leading-none">&times;</button>
+            <h3 class="text-2xl font-heading font-bold text-dark-blue mb-1 text-center">Kritik & Saran 💌</h3>
+            <p class="text-gray-500 text-sm text-center mb-6 font-medium">Bantu Sonia Store jadi lebih baik ya!</p>
+            
+            <form id="feedbackForm" onsubmit="submitFeedback(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Nama Kamu</label>
+                    <input type="text" id="fbName" required placeholder="Cth: Nisa" class="w-full px-4 py-3 rounded-2xl border-2 border-blue-50 focus:border-blue-300 focus:outline-none text-sm font-semibold bg-blue-50/30 text-dark-blue transition-colors">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Pesan / Saran</label>
+                    <textarea id="fbMessage" required rows="4" placeholder="Tulis masukan kamu buat Sonia..." class="w-full px-4 py-3 rounded-2xl border-2 border-blue-50 focus:border-blue-300 focus:outline-none text-sm font-semibold bg-blue-50/30 text-dark-blue transition-colors resize-none"></textarea>
+                </div>
+                <button type="submit" id="fbSubmitBtn" class="w-full bg-dark-blue hover:bg-dark-blue-hover text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-blue-200 active:scale-95 flex justify-center items-center gap-2">
+                    Kirim Pesan 🚀
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+
+    <script>
+        // ====== KONFIGURASI NEON DATABASE & DATA API ======
+        const NEON_DATA_API_URL = (window.__ENV__ && window.__ENV__.NEON_DATA_API_URL) || "https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1";
+        const NEON_AUTH_URL = (window.__ENV__ && window.__ENV__.NEON_AUTH_URL) || "https://ep-lingering-bird-b587vms2.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth";
+        const APP_URL = (window.__ENV__ && (window.__ENV__.NEXT_PUBLIC_APP_URL || window.__ENV__.APP_URL)) || (window.location.protocol !== 'file:' ? window.location.origin : 'http://localhost:3000');
+        const STORAGE_BUCKET = "product-images";
+        // =================================================
+
+        // Inisialisasi klien Neon (@neondatabase/neon-js)
+        const neon = window.neon || window.createNeonClient({
+            dataApiUrl: NEON_DATA_API_URL,
+            authUrl: NEON_AUTH_URL,
+            appUrl: APP_URL
+        });
+        const client = neon;
+        
+        // --- KEAMANAN & PROTEKSI WEBSITE (XSS & ANTI-CLICKJACKING) ---
+        // 1. Anti-Clickjacking: Cegah website dibuka diam-diam di dalam iframe situs lain
+        if (window.top !== window.self) {
+            window.top.location = window.self.location;
+        }
+
+        // 2. Sanitasi teks untuk mencegah injeksi script berbahaya (Anti-XSS)
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // 3. Sanitasi URL link & gambar (hanya izinkan protokol http & https yang sah)
+        function sanitizeUrl(url) {
+            if (!url) return '#';
+            const trimmed = String(url).trim();
+            if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
+                return escapeHTML(trimmed);
+            }
+            return '#';
+        }
+
+        const MAIN_CATEGORIES = ["Semua", "Perawatan & Kecantikan", "Tumbler", "Outfit", "Herbal Kecantikan", "Parfum"];
+        const SUB_CATEGORIES = {
+            "Perawatan & Kecantikan": ["Semua", "Skincare", "Hair Care", "Body Care", "Makeup"],
+            "Outfit": ["Semua", "Kaos", "Baju Kemeja", "Dress", "Celana", "Hijab", "Aksesoris"]
+        };
+
+        let allProducts = [];
+        let activeMainCat = "Semua";
+        let activeSubCat = "Semua";
+        let searchQuery = "";
+        let sortOption = "default";
+        
+        let wishlist = JSON.parse(localStorage.getItem('sonia_wishlist')) || [];
+
+        function toggleWishlist(id) {
+            if (wishlist.includes(id)) {
+                wishlist = wishlist.filter(wId => wId !== id);
+            } else {
+                wishlist.push(id);
+            }
+            localStorage.setItem('sonia_wishlist', JSON.stringify(wishlist));
+            filterProducts(); // Re-render UI
+        }
+
+        function isWishlisted(id) {
+            return wishlist.includes(id);
+        }
+
+        // --- MUSIC PLAYER LOGIC ---
+        const audio = document.getElementById('bgMusic');
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        audio.volume = 0.5; // Volume ditingkatkan jadi 50%
+        let isPlaying = false;
+
+        btnPlayPause.addEventListener('click', () => {
+            if (isPlaying) { 
+                audio.pause(); 
+                btnPlayPause.innerHTML = '▶';
+                isPlaying = false; 
+            } else { 
+                audio.play().then(() => {
+                    btnPlayPause.innerHTML = '⏸';
+                    isPlaying = true; 
+                }).catch(err => {
+                    console.error("Gagal memutar:", err);
+                    alert("Gagal memutar musik. Pastikan file valid atau tunggu proses loading selesai.");
+                });
+            }
+        });
+
+        // Ambil URL musik dari database secara dinamis
+        async function loadMusicSettings() {
+            try {
+                const { data, error } = await client.from('settings').select('*').in('key', ['music_url', 'music_title']);
+                const widget = document.getElementById('musicPlayerWidget');
+                
+                const urlObj = data.find(d => d.key === 'music_url');
+                const titleObj = data.find(d => d.key === 'music_title');
+
+                if (urlObj && urlObj.value && urlObj.value.trim() !== "") {
+                    audio.src = urlObj.value;
+                    audio.load(); // PENTING: Paksa browser memuat ulang source baru
+                    document.getElementById('musicTitleDisplay').innerText = titleObj && titleObj.value ? titleObj.value : "BGM Relax";
+                    widget.classList.remove('hidden');
+                    widget.classList.add('flex'); // Pakai flex agar styling gap-3 dll bekerja
+                } else {
+                    widget.classList.add('hidden');
+                    widget.classList.remove('flex');
+                }
+            } catch (err) {
+                console.error("Error loading music:", err);
+                document.getElementById('musicPlayerWidget').classList.add('hidden');
+            }
+        }
+
+        // --- TRACKING CLICK LOGIC (DIPROTEKSI DARI BOT & SPAM KLIK) ---
+        const recentClicks = new Set();
+        function trackClick(productId) {
+            if (!productId || typeof productId !== 'string') return;
+            // Cegah bot atau spam klik berulang (hanya 1 klik per produk per 10 detik per user)
+            if (recentClicks.has(productId)) return;
+            recentClicks.add(productId);
+            setTimeout(() => recentClicks.delete(productId), 10000);
+
+            // Proses insert bersifat async tanpa memblokir thread agar tidak ada delay saat buka link affiliate
+            client.from('click_logs').insert([{ product_id: productId }]).then(({error}) => {
+                if(error) console.error("Error tracking click:", error);
+            });
+        }
+
+        // --- FEEDBACK LOGIC (DIPROTEKSI DARI SPAM & INJEKSI XSS) ---
+        function closeFeedback() {
+            document.getElementById('feedbackModal').classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        async function submitFeedback(e) {
+            e.preventDefault();
+            const btn = document.getElementById('fbSubmitBtn');
+            const nameInput = document.getElementById('fbName');
+            const messageInput = document.getElementById('fbMessage');
+            
+            const rawName = nameInput.value.trim();
+            const rawMessage = messageInput.value.trim();
+            
+            // 1. Validasi Input Dasar
+            if (!rawName || !rawMessage) {
+                alert("Mohon isi nama dan pesan saran kamu ya.");
+                return;
+            }
+            if (rawName.length > 50) {
+                alert("Nama terlalu panjang (maksimal 50 karakter).");
+                return;
+            }
+            if (rawMessage.length > 1000) {
+                alert("Pesan saran terlalu panjang (maksimal 1000 karakter).");
+                return;
+            }
+
+            // 2. Proteksi Anti-Spam Rate Limit (Maksimal 1 kali kirim per 30 detik)
+            const lastSent = localStorage.getItem('sonia_fb_cooldown');
+            const now = Date.now();
+            if (lastSent && (now - parseInt(lastSent)) < 30000) {
+                const sisa = Math.ceil((30000 - (now - parseInt(lastSent))) / 1000);
+                alert(`Mohon tunggu ${sisa} detik sebelum mengirim saran lagi ya! 🙏`);
+                return;
+            }
+
+            btn.innerHTML = 'Mengirim... ⏳';
+            btn.disabled = true;
+
+            try {
+                // Simpan data yang sudah disanitasi
+                const { error } = await client.from('feedbacks').insert([{ 
+                    name: escapeHTML(rawName), 
+                    message: escapeHTML(rawMessage) 
+                }]);
+                if (error) throw error;
+
+                localStorage.setItem('sonia_fb_cooldown', String(now));
+                alert("Terima kasih atas saran kamu! 💖");
+                closeFeedback();
+                document.getElementById('feedbackForm').reset();
+            } catch (err) {
+                alert("Gagal mengirim saran: " + err.message);
+            } finally {
+                btn.innerHTML = 'Kirim Pesan 🚀';
+                btn.disabled = false;
+            }
+        }
+
+        // --- FORMATTING LOGIC ---
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        }
+
+        function formatPenjualan(angka) {
+            if (angka >= 1000000) return `Terjual ${(angka / 1000000).toFixed(1).replace('.0', '')}jt+`;
+            if (angka >= 1000) return `Terjual ${(angka / 1000).toFixed(1).replace('.0', '')}rb+`;
+            return `Terjual ${angka}`;
+        }
+
+        // --- UI LOGIC ---
+        // Menutup menu kategori saat mengklik area luar
+        document.addEventListener('click', (event) => {
+            const container = document.getElementById('categoryContainer');
+            const toggleBtn = document.getElementById('btnToggleCategories');
+            
+            if (container && toggleBtn && !container.classList.contains('hidden')) {
+                // Menggunakan composedPath() agar tidak tertutup otomatis 
+                // ketika elemen tombol kategori di-render ulang oleh Javascript
+                const path = event.composedPath();
+                if (!path.includes(container) && !path.includes(toggleBtn)) {
+                    container.classList.add('hidden');
+                    container.classList.remove('flex');
+                }
+            }
+        });
+
+        function toggleCategories() {
+            const container = document.getElementById('categoryContainer');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                container.classList.add('flex');
+            } else {
+                container.classList.add('hidden');
+                container.classList.remove('flex');
+            }
+        }
+
+        function initUI() {
+            loadMusicSettings(); // Load music URL
+            renderMainCategories();
+            renderSubCategories();
+            loadProducts();
+        }
+
+        function renderMainCategories() {
+            const container = document.getElementById('mainCategories');
+            let html = '';
+            
+            MAIN_CATEGORIES.forEach(cat => {
+                const isActive = activeMainCat === cat;
+                html += `
+                    <div class="flex flex-col w-full">
+                        <button onclick="setMainCategory('${cat}')" 
+                            class="px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm text-left ${isActive ? 'bg-dark-blue text-white scale-[1.02] border-2 border-dark-blue' : 'bg-white text-dark-blue hover:bg-blue-50 border-2 border-blue-100'}">
+                            ${cat}
+                        </button>
+                `;
+                
+                // Jika kategori aktif dan punya subkategori, tampilkan subkategorinya di bawahnya
+                if (isActive && SUB_CATEGORIES[cat]) {
+                    html += `<div class="flex flex-wrap gap-2 mt-2 mb-2 pl-4 border-l-2 border-blue-200 ml-4">`;
+                    html += SUB_CATEGORIES[cat].map(sub => `
+                        <button onclick="setSubCategory('${sub}')" 
+                            class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm ${activeSubCat === sub ? 'bg-blue-400 text-white border-2 border-blue-400' : 'bg-white text-dark-blue hover:bg-blue-50 border-2 border-blue-100'}">
+                            ${sub}
+                        </button>
+                    `).join('');
+                    html += `</div>`;
+                }
+                
+                html += `</div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function renderSubCategories() {
+            // Function no longer needed since subcategories are rendered inside renderMainCategories.
+            // Keeping it empty to prevent undefined errors if called from elsewhere.
+        }
+
+        function setMainCategory(cat) {
+            activeMainCat = cat;
+            activeSubCat = "Semua"; // Reset subkategori
+            renderMainCategories();
+            filterProducts();
+        }
+
+        function setSubCategory(cat) {
+            activeSubCat = cat;
+            renderMainCategories(); // Re-render to update subcategory active state
+            filterProducts();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            filterProducts();
+        }
+
+        function handleSort() {
+            sortOption = document.getElementById('sortPrice').value;
+            filterProducts();
+        }
+
+        async function loadProducts() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('productGrid').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+
+            try {
+                const { data, error } = await client
+                    .from('products')
+                    .select('*')
+                    .order('sales', { ascending: false });
+
+                if (error) throw error;
+                allProducts = data;
+                filterProducts();
+            } catch (error) {
+                console.error("Error loading products:", error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('emptyState').innerHTML = `<p class="text-red-500 font-bold">Gagal memuat produk. Cek konfigurasi database.</p>`;
+            }
+        }
+
+        function filterProducts() {
+            let filtered = [...allProducts]; // clone array
+
+            if (activeMainCat !== "Semua") {
+                filtered = filtered.filter(p => p.category === activeMainCat);
+                // Filter subkategori jika aktif dan bukan "Semua"
+                if (activeSubCat !== "Semua") {
+                    filtered = filtered.filter(p => p.subcategory === activeSubCat);
+                }
+            }
+
+            if (searchQuery) {
+                filtered = filtered.filter(p => p.title.toLowerCase().includes(searchQuery));
+            }
+
+            // Apply Sorting
+            if (sortOption === "asc") {
+                filtered.sort((a, b) => (a.discount_price || a.price) - (b.discount_price || b.price));
+            } else if (sortOption === "desc") {
+                filtered.sort((a, b) => (b.discount_price || b.price) - (a.discount_price || a.price));
+            } else {
+                filtered.sort((a, b) => b.sales - a.sales); // Default: Terlaris
+            }
+
+            renderProducts(filtered);
+        }
+
+        function renderProducts(products) {
+            document.getElementById('loadingState').classList.add('hidden');
+            
+            const grid = document.getElementById('productGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (products.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                grid.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                grid.innerHTML = products.map(product => {
+                    const priceHtml = product.discount_price 
+                        ? `<div class="flex flex-col">
+                             <span class="text-xs text-gray-400 line-through font-normal">${formatRupiah(product.price)}</span>
+                             <span class="text-dark-blue text-base font-bold">${formatRupiah(product.discount_price)}</span>
+                           </div>`
+                        : `<div class="flex flex-col"><span class="text-dark-blue text-base font-bold">${formatRupiah(product.price)}</span></div>`;
+
+                    const safeId = escapeHTML(product.id);
+                    const safeTitle = escapeHTML(product.title);
+                    const safeCategory = escapeHTML(product.category);
+                    const safeSubcategory = product.subcategory ? escapeHTML(product.subcategory) : '';
+                    const badgeText = safeSubcategory ? safeSubcategory : safeCategory;
+                    const safeImageUrl = sanitizeUrl(product.image_url);
+                    const safeAffiliateLink = sanitizeUrl(product.affiliate_link);
+                    
+                    const singleBadge = `<div class="absolute top-0 left-0 z-10 bg-dark-blue text-white text-[10px] font-bold px-2 py-1 rounded-br-lg shadow-sm">${badgeText}</div>`;
+                    const heartIcon = isWishlisted(product.id) ? '❤️' : '🤍';
+
+                    return `
+                        <div class="bg-white flex flex-col h-full overflow-hidden border border-gray-200 rounded shadow-sm hover:shadow-md transition-shadow relative">
+                            
+                            <div class="relative w-full aspect-square bg-gray-50 group">
+                                <img src="${safeImageUrl}" alt="${safeTitle}" class="w-full h-full object-cover" loading="lazy">
+                                ${singleBadge}
+                                <button onclick="toggleWishlist('${safeId}')" class="absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-xs hover:scale-110 transition-transform active:scale-95">
+                                    ${heartIcon}
+                                </button>
+                            </div>
+                            
+                            <div class="p-2.5 flex flex-col flex-grow">
+                                <h3 class="text-xs md:text-sm text-gray-800 mb-1 line-clamp-2 leading-snug">${safeTitle}</h3>
+                                
+                                <div class="mt-auto pt-2">
+                                    ${priceHtml}
+                                    
+                                    <div class="flex justify-between items-center mt-1.5 md:mt-2">
+                                        <div class="text-[10px] md:text-xs text-gray-500">
+                                            Terjual ${formatPenjualan(product.sales)}
+                                        </div>
+                                        <a href="${safeAffiliateLink}" onclick="trackClick('${safeId}')" target="_blank" rel="noopener noreferrer" class="bg-dark-blue hover:bg-dark-blue-hover text-white text-[10px] md:text-xs font-bold py-1 px-2.5 rounded transition-colors shadow-sm">
+                                            Beli
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Run init when DOM is ready
+        document.addEventListener('DOMContentLoaded', initUI);
+    </script>
+</body>
+</html>

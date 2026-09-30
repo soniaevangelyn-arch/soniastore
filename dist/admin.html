@@ -11,7 +11,6 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Neon SDK (@neondatabase/neon-js & @neondatabase/auth-ui) -->
-    <link rel="stylesheet" href="./dist/auth-ui.css">
     <script src="./dist/neon.browser.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -35,13 +34,7 @@
             }
         }
     </script>
-    <style>
-        body { font-family: 'Quicksand', sans-serif; background-color: #FDFBF7; color: #333333; } /* Cream background for inner pages */
-        h1, h2, h3, .font-heading { font-family: '"Fredoka"', sans-serif; }
-        .btn-pill { border-radius: 9999px; transition: all 0.3s ease; }
-        .modal { transition: opacity 0.25s ease; }
-        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
-    </style>
+    <style>body{color:#333;background-color:#fdfbf7;font-family:Quicksand,sans-serif}h1,h2,h3,.font-heading{font-family:"\"Fredoka\"",sans-serif}.btn-pill{border-radius:9999px;transition:all .3s}.modal{transition:opacity .25s}body.modal-active{overflow-x:hidden;overflow-y:hidden!important}</style>
     <script>
         // Support runtime injection of environment variables
         window.__ENV__ = window.__ENV__ || {};
@@ -50,6 +43,7 @@
             window.location.href = window.location.href.replace('127.0.0.1', 'localhost');
         }
     </script>
+  <link rel="stylesheet" crossorigin href="/assets/admin-CScY_SO0.css">
 </head>
 <body class="min-h-screen flex flex-col md:flex-row">
 
