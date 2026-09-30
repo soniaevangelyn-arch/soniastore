@@ -222,6 +222,15 @@ export default async function handler(req, res) {
 
     const html = await fetchRes.text();
 
+    // Cek apakah diarahkan ke error_page oleh Shopee
+    if (fetchRes.url.includes('error_page') || fetchRes.url.includes('/error') || (html && html.includes('shope.ee/error_page'))) {
+      return res.status(200).json({
+        success: false,
+        message: 'Tautan Shopee ini tidak aktif atau diarahkan ke halaman error oleh Shopee. Silakan gunakan tautan produk aktif atau isi form secara manual.',
+        affiliate_url: targetUrl
+      });
+    }
+
     function getMeta(prop) {
       const r1 = new RegExp(`<meta[^>]*property=["']${prop}["'][^>]*content=["']([^"']+)["']`, 'i');
       const m1 = html.match(r1);
@@ -268,10 +277,10 @@ export default async function handler(req, res) {
 
     const title = cleanTitle(fullTitle || rawTitle);
 
-    if (!title && !imageUrl) {
+    if (!title || title.toLowerCase().includes('mkt single page') || (!imageUrl && !description)) {
       return res.status(200).json({
         success: false,
-        message: 'Tidak dapat mengambil metadata otomatis dari link Shopee ini. Silakan isi form manual.',
+        message: 'Tidak dapat mengambil metadata dari link Shopee ini (halaman produk tidak ditemukan atau link sudah kadaluarsa). Silakan gunakan link yang masih aktif atau isi form manual.',
         affiliate_url: targetUrl
       });
     }
