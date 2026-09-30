@@ -321,6 +321,21 @@
                 <!-- ... Same as before ... -->
                 <input type="hidden" id="productId">
                 
+                <!-- Link Affiliate Shopee (Auto-Fill di paling atas) -->
+                <div class="mb-5 p-4 bg-blue-50/40 border-2 border-blue-100 rounded-2xl">
+                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1 flex items-center justify-between">
+                        <span>Link Affiliate Shopee *</span>
+                        <span class="text-[11px] font-bold text-blue-600 bg-blue-100/70 px-2 py-0.5 rounded-full">Auto-Fill Otomatis ⚡</span>
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="url" id="inputAffiliateLink" required placeholder="Paste link Shopee di sini (misal: https://s.shopee.co.id/...)" class="w-full px-4 py-2.5 border-2 border-blue-100 rounded-xl focus:border-blue-400 outline-none text-sm font-semibold bg-white transition-all">
+                        <button type="button" onclick="triggerManualAutoFill()" class="px-4 py-2.5 bg-dark-blue hover:bg-dark-blue-hover text-white rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 shadow-sm">
+                            <span>Ambil Data</span>
+                        </button>
+                    </div>
+                    <p id="affiliateAutofillStatus" class="hidden text-xs mt-2 ml-1 font-semibold transition-all"></p>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                     <div>
                         <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Kategori Utama *</label>
@@ -363,12 +378,6 @@
                         <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Terjual *</label>
                         <input type="number" id="inputSales" required min="0" placeholder="Cth: 1500" class="w-full px-4 py-2.5 border-2 border-blue-50 rounded-xl focus:border-blue-300 outline-none text-sm font-semibold bg-blue-50/20">
                     </div>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-sm font-bold text-dark-blue mb-1.5 ml-1">Link Affiliate Shopee *</label>
-                    <input type="url" id="inputAffiliateLink" required placeholder="https://shope.ee/..." class="w-full px-4 py-2.5 border-2 border-blue-50 rounded-xl focus:border-blue-300 outline-none text-sm font-semibold bg-blue-50/20">
-                    <p id="affiliateAutofillStatus" class="hidden text-xs mt-1.5 ml-1 font-semibold transition-all"></p>
                 </div>
 
                 <div class="mb-8 p-5 border-2 border-dashed border-blue-200 rounded-2xl bg-blue-50/30">
@@ -1133,20 +1142,23 @@
         let lastAutoFilledUrl = '';
         let isAutoFilling = false;
 
-        async function autoFillShopeeMetadata(inputUrl) {
+        async function autoFillShopeeMetadata(inputUrl, force = false) {
             const url = (inputUrl || '').trim();
             if (!url) return;
 
             // Validasi domain Shopee
             const isShopee = /shopee\.(co\.id|com|sg|my|vn|ph|th)|(s|my|vn)\.shopee\.co\.id|shope\.ee|shp\.ee/i.test(url);
-            if (!isShopee) return;
+            if (!isShopee) {
+                if (force) alert("Tautan yang dimasukkan bukan tautan resmi Shopee.");
+                return;
+            }
 
-            if (url === lastAutoFilledUrl) return;
+            if (!force && url === lastAutoFilledUrl) return;
 
             const statusEl = document.getElementById('affiliateAutofillStatus');
             if (statusEl) {
-                statusEl.className = 'text-xs mt-1.5 ml-1 font-semibold text-blue-600 flex items-center gap-1.5';
-                statusEl.innerHTML = '<svg class="animate-spin h-3.5 w-3.5 text-blue-600 inline shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sedang mengambil metadata produk dari Shopee...';
+                statusEl.className = 'text-xs mt-2 ml-1 font-semibold text-blue-600 flex items-center gap-1.5';
+                statusEl.innerHTML = '<svg class="animate-spin h-3.5 w-3.5 text-blue-600 inline shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Mengambil data & mengunggah foto ke storage...';
                 statusEl.classList.remove('hidden');
             }
 
@@ -1189,36 +1201,48 @@
                         document.getElementById('inputDiscountPrice').value = d.discount_price;
                     }
 
-                    // 4. Gambar Produk
+                    // 4. Foto Produk (Otomatis ter-upload ke Vercel Blob)
                     if (d.image_url) {
                         document.getElementById('inputImageUrl').value = d.image_url;
+                        document.getElementById('inputFile').value = '';
                         updateImagePreview(d.image_url);
                     }
 
                     // Pesan status informatif
                     if (statusEl) {
-                        statusEl.className = 'text-xs mt-1.5 ml-1 font-semibold text-emerald-600';
+                        statusEl.className = 'text-xs mt-2 ml-1 font-semibold text-emerald-600';
                         if (!d.price) {
-                            statusEl.innerHTML = '✨ Judul, kategori & gambar berhasil diambil otomatis! Silakan lengkapi harga secara manual.';
+                            statusEl.innerHTML = '✨ Judul, kategori & foto berhasil ter-upload otomatis! Silakan masukkan harga sebelum simpan.';
                         } else {
-                            statusEl.innerHTML = '✨ Data produk berhasil diisi otomatis! Semua field tetap dapat diedit sebelum disimpan.';
+                            statusEl.innerHTML = '✨ Judul, kategori, harga & foto berhasil ter-upload otomatis ke storage!';
                         }
                     }
                 } else {
                     if (statusEl) {
-                        statusEl.className = 'text-xs mt-1.5 ml-1 font-semibold text-amber-600';
-                        statusEl.innerHTML = '⚠️ Metadata tidak dapat diambil otomatis dari link ini. Silakan isi field secara manual.';
+                        statusEl.className = 'text-xs mt-2 ml-1 font-semibold text-amber-600';
+                        statusEl.innerHTML = '⚠️ Metadata tidak dapat diambil otomatis dari link ini. Silakan isi form manual.';
                     }
                 }
             } catch (err) {
                 console.warn('Gagal mengambil metadata Shopee:', err);
                 if (statusEl) {
-                    statusEl.className = 'text-xs mt-1.5 ml-1 font-semibold text-amber-600';
-                    statusEl.innerHTML = '⚠️ Tidak dapat terhubung ke layanan auto-fill. Silakan isi field secara manual.';
+                    statusEl.className = 'text-xs mt-2 ml-1 font-semibold text-amber-600';
+                    statusEl.innerHTML = '⚠️ Tidak dapat terhubung ke server auto-fill. Silakan isi form manual.';
                 }
             } finally {
                 isAutoFilling = false;
             }
+        }
+
+        function triggerManualAutoFill() {
+            const input = document.getElementById('inputAffiliateLink');
+            const val = input ? input.value.trim() : '';
+            if (!val) {
+                alert("Silakan tempel (paste) Link Affiliate Shopee terlebih dahulu.");
+                if (input) input.focus();
+                return;
+            }
+            autoFillShopeeMetadata(val, true);
         }
 
         const affiliateInput = document.getElementById('inputAffiliateLink');
@@ -1226,7 +1250,7 @@
             affiliateInput.addEventListener('paste', function(e) {
                 const pastedText = (e.clipboardData || window.clipboardData).getData('text');
                 if (pastedText) {
-                    setTimeout(() => autoFillShopeeMetadata(affiliateInput.value || pastedText), 60);
+                    setTimeout(() => autoFillShopeeMetadata(affiliateInput.value || pastedText), 50);
                 }
             });
             affiliateInput.addEventListener('blur', function() {

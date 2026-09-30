@@ -1,5 +1,9 @@
+import { put } from '@vercel/blob';
+
 // Vercel Serverless Function: Extract Shopee Product Metadata
-// Safe server-side scraper without leaking client credentials
+// Safe server-side scraper with automatic image upload to Vercel Blob
+
+const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_BLOB_READ_WRITE_TOKEN || 'vercel_blob_rw_D13YMXPZVpuEHykD_mfsMybgl4xrXWWBAtMpY0NlfVWUwYR';
 
 function cleanTitle(rawTitle) {
   if (!rawTitle) return '';
@@ -277,13 +281,39 @@ export default async function handler(req, res) {
     const badge = detectBadge(textContext);
     const prices = extractPrices(textContext, html);
 
+    // Otomatis download foto dari Shopee dan upload ke Vercel Blob
+    let finalImageUrl = imageUrl || '';
+    let isUploadedToBlob = false;
+
+    if (imageUrl && BLOB_TOKEN) {
+      try {
+        const imgRes = await fetch(imageUrl);
+        if (imgRes.ok) {
+          const arrayBuffer = await imgRes.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const pathname = `product-images/shopee_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+          const blobUpload = await put(pathname, buffer, {
+            access: 'public',
+            token: BLOB_TOKEN
+          });
+          if (blobUpload && blobUpload.url) {
+            finalImageUrl = blobUpload.url;
+            isUploadedToBlob = true;
+          }
+        }
+      } catch (blobErr) {
+        console.warn('Gagal upload otomatis ke Vercel Blob, fallback ke CDN Shopee:', blobErr.message);
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Metadata produk Shopee berhasil diambil.',
       data: {
         affiliate_url: targetUrl, // Tetap gunakan link affiliate asli
         title: title || '',
-        image_url: imageUrl || '',
+        image_url: finalImageUrl,
+        is_blob: isUploadedToBlob,
         category: category || '',
         subcategory: subcategory || null,
         badge: badge || null,
