@@ -67,46 +67,13 @@ function detectCategory(text) {
     }
   }
 
-  // 5. Tumbler
-  const tumblerKeywords = [
-    'tumbler', 'tambler', 'botol minum', 'termos', 'canteen', 'corkcicle', 'stanley', 'vacuum flask'
-  ];
-  for (const kw of tumblerKeywords) {
-    if (new RegExp(`\\b${kw}\\b`, 'i').test(t) || t.includes(kw)) {
-      return { category: 'Tumbler', subcategory: null };
-    }
-  }
-
-  // 6. Outfit
-  const outfitKeywords = [
-    'baju', 'dress', 'gaun', 'blouse', 'kemeja', 'rok', 'skirt', 'celana', 
-    'pants', 'cardigan', 'knit', 'sweater', 'outer', 'jacket', 'jaket', 
-    'blazer', 'vest', 'hijab', 'pashmina', 'jilbab', 'kaos', 'outfit', 'kulot', 'one set'
-  ];
-  for (const kw of outfitKeywords) {
-    if (new RegExp(`\\b${kw}\\b`, 'i').test(t) || t.includes(kw)) {
-      return { category: 'Outfit', subcategory: null };
-    }
-  }
-
-  // 7. Parfum
+  // 5. Parfum
   const parfumKeywords = [
     'parfum', 'perfume', 'edp', 'edt', 'body mist', 'fragrance', 'cologne', 'minyak wangi', 'scent'
   ];
   for (const kw of parfumKeywords) {
     if (new RegExp(`\\b${kw}\\b`, 'i').test(t) || t.includes(kw)) {
       return { category: 'Parfum', subcategory: null };
-    }
-  }
-
-  // 8. Herbal Kecantikan
-  const herbalKeywords = [
-    'herbal', 'collagen drink', 'minuman kolagen', 'teh diet', 'teh pelangsing', 
-    'jamu', 'suplemen kecantikan', 'suplemen kulit', 'gluta', 'glutathione', 'kapsul herbal'
-  ];
-  for (const kw of herbalKeywords) {
-    if (new RegExp(`\\b${kw}\\b`, 'i').test(t) || t.includes(kw)) {
-      return { category: 'Herbal Kecantikan', subcategory: null };
     }
   }
 
