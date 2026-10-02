@@ -135,6 +135,9 @@
                             📤 Import
                             <input type="file" id="importCsvInput" accept=".csv" class="hidden" onchange="importCSV(event)">
                         </label>
+                        <button type="button" onclick="openBulkModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap shadow-md shadow-blue-200 transition-colors flex items-center gap-1.5">
+                            <span>⚡ Multi-Upload (5 Link)</span>
+                        </button>
                         <button onclick="openModal()" class="bg-dark-blue hover:bg-dark-blue-hover text-white px-5 py-2 rounded-xl font-bold whitespace-nowrap shadow-md shadow-blue-200 transition-colors">
                             + Tambah
                         </button>
@@ -381,6 +384,73 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Multi-Upload (Upload Banyak Link Shopee Sekaligus) -->
+    <div id="bulkModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-dark-blue/40 backdrop-blur-sm opacity-0 pointer-events-none transition-all">
+        <div class="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4 rounded-[24px] shadow-2xl relative flex flex-col">
+            <div class="sticky top-0 bg-white px-8 py-5 border-b border-gray-100 flex justify-between items-center z-10 rounded-t-[24px]">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                        <h3 class="text-xl font-bold text-dark-blue font-heading leading-tight">Upload Sekaligus (Multi-Link Shopee)</h3>
+                        <p class="text-xs text-gray-400 font-semibold">Masukkan hingga 5 link produk Shopee untuk dibaca dan di-upload otomatis</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeBulkModal()" class="text-gray-400 hover:text-red-500 text-3xl leading-none transition-colors">&times;</button>
+            </div>
+
+            <div class="p-8 pt-6 flex-grow flex flex-col gap-5">
+                <!-- Textarea input link -->
+                <div class="p-5 bg-blue-50/30 border-2 border-dashed border-blue-200 rounded-2xl">
+                    <label class="block text-sm font-bold text-dark-blue mb-2 flex items-center justify-between">
+                        <span>Tempelkan Link Affiliate Shopee:</span>
+                        <span class="text-xs text-blue-600 font-bold bg-blue-100/60 px-2 py-0.5 rounded-full">1 baris = 1 link</span>
+                    </label>
+                    <textarea id="bulkLinksInput" rows="5" oninput="handleBulkInputCounter()" placeholder="Tempel hingga 5 link di sini, contoh:&#10;https://s.shopee.co.id/xxx&#10;https://s.shopee.co.id/yyy&#10;https://s.shopee.co.id/zzz" class="w-full p-4 border-2 border-blue-100 rounded-xl focus:border-blue-400 outline-none text-xs md:text-sm font-mono font-medium bg-white transition-all resize-y"></textarea>
+                    
+                    <div class="flex flex-col sm:flex-row justify-between items-center mt-3 gap-3">
+                        <span id="bulkCountLabel" class="text-xs font-semibold text-gray-500">0 link terdeteksi</span>
+                        <button type="button" id="btnStartBulk" onclick="processBulkLinks()" class="w-full sm:w-auto px-6 py-2.5 bg-dark-blue hover:bg-dark-blue-hover text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
+                            <span>🚀 Baca & Upload Semua Foto</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status / Progress bar -->
+                <div id="bulkProgressArea" class="hidden flex flex-col gap-2 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                    <div class="flex justify-between items-center text-xs font-bold text-dark-blue">
+                        <span id="bulkProgressText">Sedang membaca link produk...</span>
+                        <span id="bulkProgressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-blue-100 h-2 rounded-full overflow-hidden">
+                        <div id="bulkProgressBar" class="bg-blue-600 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Container Hasil Card Preview -->
+                <div id="bulkResultsWrapper" class="hidden flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-sm font-bold text-dark-blue flex items-center gap-2">
+                            <span>Hasil Pembacaan Produk:</span>
+                            <span id="bulkSuccessBadge" class="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-0.5 rounded-full font-bold">0 Sukses</span>
+                        </h4>
+                        <button type="button" onclick="clearBulkResults()" class="text-xs text-red-500 hover:underline font-semibold">Bersihkan Hasil</button>
+                    </div>
+                    <div id="bulkResultsList" class="flex flex-col gap-3 max-h-[380px] overflow-y-auto pr-1">
+                        <!-- Cards rendered via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="sticky bottom-0 bg-white px-8 py-4 border-t border-gray-100 flex justify-end gap-3 rounded-b-[24px]">
+                <button type="button" onclick="closeBulkModal()" class="px-6 py-2.5 text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-sm transition-colors">Batal</button>
+                <button type="button" id="btnSaveBulk" onclick="saveAllBulkProducts()" disabled class="px-8 py-2.5 bg-dark-blue opacity-50 cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-md">
+                    <span>💾 Simpan Semua Produk ke Katalog</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1353,6 +1423,296 @@
                     }
                     loadAdminProducts();
                 }
+            }
+        }
+
+        // ====== FITUR MULTI-UPLOAD SHOPEE AFFILIATE ======
+        let bulkProcessedItems = [];
+        let isBulkProcessing = false;
+
+        function openBulkModal() {
+            document.getElementById('bulkLinksInput').value = '';
+            document.getElementById('bulkCountLabel').innerText = '0 link terdeteksi';
+            document.getElementById('bulkProgressArea').classList.add('hidden');
+            document.getElementById('bulkResultsWrapper').classList.add('hidden');
+            document.getElementById('bulkResultsList').innerHTML = '';
+            bulkProcessedItems = [];
+            
+            const btnSave = document.getElementById('btnSaveBulk');
+            btnSave.disabled = true;
+            btnSave.classList.add('opacity-50', 'cursor-not-allowed');
+            btnSave.innerHTML = '<span>💾 Simpan Semua Produk ke Katalog</span>';
+
+            const modal = document.getElementById('bulkModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.body.classList.add('modal-active');
+        }
+
+        function closeBulkModal() {
+            const modal = document.getElementById('bulkModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.classList.remove('modal-active');
+        }
+
+        function extractShopeeUrls(rawText) {
+            if (!rawText) return [];
+            const lines = rawText.split(/[\r\n]+/);
+            const urls = [];
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                const match = line.match(/https?:\/\/[^\s]+/i);
+                if (match) {
+                    const u = match[0].trim();
+                    if (/shopee\.(co\.id|com|sg|my|vn|ph|th)|(s|my|vn)\.shopee\.co\.id|shope\.ee|shp\.ee/i.test(u)) {
+                        urls.push(u);
+                    }
+                }
+            }
+            return Array.from(new Set(urls));
+        }
+
+        function handleBulkInputCounter() {
+            const val = document.getElementById('bulkLinksInput').value;
+            const urls = extractShopeeUrls(val);
+            const label = document.getElementById('bulkCountLabel');
+            if (urls.length === 0) {
+                label.innerText = '0 link terdeteksi';
+                label.className = 'text-xs font-semibold text-gray-500';
+            } else if (urls.length <= 5) {
+                label.innerText = `✅ ${urls.length} link Shopee terdeteksi`;
+                label.className = 'text-xs font-bold text-blue-600';
+            } else {
+                label.innerText = `⚡ ${urls.length} link Shopee terdeteksi (disarankan maks. 5 link sekaligus)`;
+                label.className = 'text-xs font-bold text-amber-600';
+            }
+        }
+
+        async function processBulkLinks() {
+            if (isBulkProcessing) return;
+            const val = document.getElementById('bulkLinksInput').value;
+            const urls = extractShopeeUrls(val);
+
+            if (urls.length === 0) {
+                alert("Silakan tempelkan minimal 1 tautan Shopee yang valid pada kotak input.");
+                document.getElementById('bulkLinksInput').focus();
+                return;
+            }
+
+            isBulkProcessing = true;
+            const btnStart = document.getElementById('btnStartBulk');
+            btnStart.disabled = true;
+            btnStart.innerHTML = '<svg class="animate-spin h-4 w-4 text-white inline mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...';
+
+            const progressArea = document.getElementById('bulkProgressArea');
+            const progressText = document.getElementById('bulkProgressText');
+            const progressPercent = document.getElementById('bulkProgressPercent');
+            const progressBar = document.getElementById('bulkProgressBar');
+            const resultsWrapper = document.getElementById('bulkResultsWrapper');
+
+            progressArea.classList.remove('hidden');
+            resultsWrapper.classList.remove('hidden');
+            bulkProcessedItems = [];
+            renderBulkResultsList();
+
+            const total = urls.length;
+            let completed = 0;
+
+            for (let i = 0; i < urls.length; i++) {
+                const targetUrl = urls[i];
+                progressText.innerText = `Membaca link ${i + 1} dari ${total} & mengunggah foto... ⏳`;
+                
+                try {
+                    const res = await fetch('/api/shopee-metadata', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: targetUrl })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok && data.success && data.data) {
+                        bulkProcessedItems.push({
+                            id: Date.now() + Math.random(),
+                            title: data.data.title || 'Produk Shopee',
+                            category: data.data.category || 'Perawatan & Kecantikan',
+                            subcategory: data.data.subcategory || 'Skincare',
+                            image_url: data.data.image_url || '',
+                            affiliate_url: data.data.affiliate_url || targetUrl,
+                            status: 'success'
+                        });
+                    } else {
+                        bulkProcessedItems.push({
+                            id: Date.now() + Math.random(),
+                            affiliate_url: targetUrl,
+                            title: 'Gagal Membaca Produk',
+                            error: data.message || 'Halaman error atau tautan tidak valid',
+                            status: 'error'
+                        });
+                    }
+                } catch (e) {
+                    bulkProcessedItems.push({
+                        id: Date.now() + Math.random(),
+                        affiliate_url: targetUrl,
+                        title: 'Koneksi Gagal',
+                        error: e.message || 'Tidak dapat menghubungi server',
+                        status: 'error'
+                    });
+                }
+
+                completed++;
+                const pct = Math.round((completed / total) * 100);
+                progressBar.style.width = `${pct}%`;
+                progressPercent.innerText = `${pct}%`;
+                renderBulkResultsList();
+            }
+
+            progressText.innerText = `Selesai! Berhasil membaca ${bulkProcessedItems.filter(x => x.status === 'success').length} dari ${total} produk.`;
+            btnStart.disabled = false;
+            btnStart.innerHTML = '<span>🚀 Baca & Upload Semua Foto</span>';
+            isBulkProcessing = false;
+        }
+
+        function renderBulkResultsList() {
+            const listEl = document.getElementById('bulkResultsList');
+            const badgeEl = document.getElementById('bulkSuccessBadge');
+            const btnSave = document.getElementById('btnSaveBulk');
+
+            const successCount = bulkProcessedItems.filter(x => x.status === 'success').length;
+            badgeEl.innerText = `${successCount} Sukses`;
+
+            if (successCount > 0) {
+                btnSave.disabled = false;
+                btnSave.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnSave.innerHTML = `<span>💾 Simpan Semua Produk (${successCount} Produk)</span>`;
+            } else {
+                btnSave.disabled = true;
+                btnSave.classList.add('opacity-50', 'cursor-not-allowed');
+                btnSave.innerHTML = `<span>💾 Simpan Semua Produk ke Katalog</span>`;
+            }
+
+            if (bulkProcessedItems.length === 0) {
+                listEl.innerHTML = '<div class="text-xs text-gray-400 text-center py-4">Belum ada link yang diproses.</div>';
+                return;
+            }
+
+            listEl.innerHTML = bulkProcessedItems.map((item, idx) => {
+                if (item.status === 'error') {
+                    return `
+                    <div class="p-3 bg-red-50/60 border border-red-200 rounded-xl flex items-center justify-between gap-3 transition-all">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span class="text-lg">⚠️</span>
+                            <div class="flex flex-col min-w-0">
+                                <span class="text-xs font-bold text-red-600 truncate">${escapeHTML(item.error || 'Link tidak dapat dimuat')}</span>
+                                <span class="text-[11px] text-gray-500 font-mono truncate max-w-sm">${escapeHTML(item.affiliate_url)}</span>
+                            </div>
+                        </div>
+                        <button type="button" onclick="removeBulkItem(${idx})" class="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1">Hapus</button>
+                    </div>`;
+                }
+
+                return `
+                <div class="p-3.5 bg-white border border-blue-100 hover:border-blue-200 rounded-xl flex gap-3.5 items-start shadow-sm transition-all">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-50 border border-gray-200">
+                        <img src="${escapeHTML(item.image_url)}" alt="Thumb" class="w-full h-full object-cover" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23eee%22/></svg>'">
+                    </div>
+                    <div class="flex-grow flex flex-col gap-1.5 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <span>✅</span> <span>Foto & Data Siap</span>
+                            </span>
+                            <button type="button" onclick="removeBulkItem(${idx})" class="text-xs text-gray-400 hover:text-red-500 font-bold">Hapus</button>
+                        </div>
+                        <input type="text" value="${escapeHTML(item.title)}" onchange="updateBulkItemTitle(${idx}, this.value)" placeholder="Judul Produk" class="w-full px-2.5 py-1 text-xs font-bold text-dark-blue border border-gray-200 rounded-lg focus:border-blue-400 outline-none bg-blue-50/20">
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <select onchange="updateBulkItemCategory(${idx}, this.value)" class="text-xs px-2 py-1 border border-gray-200 rounded-lg font-semibold text-gray-700 bg-white outline-none">
+                                <option value="Perawatan & Kecantikan" ${item.category === 'Perawatan & Kecantikan' ? 'selected' : ''}>Perawatan & Kecantikan</option>
+                                <option value="Parfum" ${item.category === 'Parfum' ? 'selected' : ''}>Parfum</option>
+                            </select>
+                            <select id="bulkSubCat_${idx}" onchange="updateBulkItemSubCategory(${idx}, this.value)" class="text-xs px-2 py-1 border border-gray-200 rounded-lg font-semibold text-gray-700 bg-white outline-none ${item.category === 'Parfum' ? 'hidden' : ''}">
+                                <option value="Skincare" ${item.subcategory === 'Skincare' ? 'selected' : ''}>Skincare</option>
+                                <option value="Hair Care" ${item.subcategory === 'Hair Care' ? 'selected' : ''}>Hair Care</option>
+                                <option value="Body Care" ${item.subcategory === 'Body Care' ? 'selected' : ''}>Body Care</option>
+                                <option value="Makeup" ${item.subcategory === 'Makeup' ? 'selected' : ''}>Makeup</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function updateBulkItemTitle(idx, val) {
+            if (bulkProcessedItems[idx]) {
+                bulkProcessedItems[idx].title = val;
+            }
+        }
+
+        function updateBulkItemCategory(idx, val) {
+            if (bulkProcessedItems[idx]) {
+                bulkProcessedItems[idx].category = val;
+                const subCatSelect = document.getElementById(`bulkSubCat_${idx}`);
+                if (subCatSelect) {
+                    if (val === 'Parfum') {
+                        subCatSelect.classList.add('hidden');
+                        bulkProcessedItems[idx].subcategory = null;
+                    } else {
+                        subCatSelect.classList.remove('hidden');
+                        bulkProcessedItems[idx].subcategory = subCatSelect.value || 'Skincare';
+                    }
+                }
+            }
+        }
+
+        function updateBulkItemSubCategory(idx, val) {
+            if (bulkProcessedItems[idx]) {
+                bulkProcessedItems[idx].subcategory = val;
+            }
+        }
+
+        function removeBulkItem(idx) {
+            bulkProcessedItems.splice(idx, 1);
+            renderBulkResultsList();
+        }
+
+        function clearBulkResults() {
+            bulkProcessedItems = [];
+            renderBulkResultsList();
+            document.getElementById('bulkProgressArea').classList.add('hidden');
+            document.getElementById('bulkResultsWrapper').classList.add('hidden');
+        }
+
+        async function saveAllBulkProducts() {
+            const validItems = bulkProcessedItems.filter(x => x.status === 'success');
+            if (validItems.length === 0) {
+                alert("Tidak ada produk valid yang siap disimpan.");
+                return;
+            }
+
+            const btnSave = document.getElementById('btnSaveBulk');
+            btnSave.disabled = true;
+            btnSave.innerText = `Menyimpan ${validItems.length} produk... ⏳`;
+
+            try {
+                const batchPayload = validItems.map(p => ({
+                    title: p.title,
+                    category: p.category,
+                    subcategory: p.subcategory || null,
+                    price: 0,
+                    discount_price: null,
+                    sales: 0,
+                    affiliate_link: p.affiliate_url,
+                    image_url: p.image_url
+                }));
+
+                const { error } = await client.from('products').insert(batchPayload);
+                if (error) throw error;
+
+                alert(`🎉 Berhasil menyimpan ${batchPayload.length} produk ke katalog!`);
+                closeBulkModal();
+                loadAdminProducts();
+            } catch (err) {
+                alert("Gagal menyimpan produk massal: " + err.message);
+                btnSave.disabled = false;
+                btnSave.innerText = `💾 Simpan Semua Produk (${validItems.length} Produk)`;
             }
         }
 
