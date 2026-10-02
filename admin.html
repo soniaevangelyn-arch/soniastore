@@ -128,6 +128,33 @@
         <div class="p-6 md:p-8">
             <!-- SECTION: DATA PRODUK -->
             <div id="section-products">
+                <!-- Broken Links 24h Alert Banner -->
+                <div id="brokenLinksBanner" class="hidden mb-6 p-4 md:p-5 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
+                    <div class="flex items-start gap-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0 font-bold">
+                            ⚠️
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm font-bold text-red-900 font-heading">
+                                    Peringatan: Ditemukan <span id="brokenBannerCount" class="underline font-extrabold">0</span> Link Shopee Rusak / Dihapus
+                                </span>
+                                <span class="bg-red-200 text-red-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                    Aturan 24 Jam
+                                </span>
+                            </div>
+                            <p class="text-xs text-red-700 mt-1 leading-relaxed">
+                                Link produk ini sudah tidak aktif atau diarahkan ke error oleh Shopee. Jika tidak diperbaiki atau direspons dalam <strong>24 jam</strong>, sistem akan <strong>otomatis menghapus produk</strong> tersebut dari katalog.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
+                        <button onclick="openBrokenLinksModal()" class="w-full md:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md shadow-red-200 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap">
+                            <span>📋 Periksa & Tangani (<span id="brokenBannerBtnCount">0</span>)</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Header Section Data Produk -->
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4">
                     <div>
@@ -145,6 +172,9 @@
                             <input type="text" id="searchInput" onkeyup="searchProducts()" placeholder="Cari judul..." class="w-full pl-10 pr-4 py-2 border-2 border-blue-100 rounded-xl focus:outline-none focus:border-blue-300 font-semibold text-sm bg-white">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                         </div>
+                        <button type="button" onclick="openAuditModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-xl font-bold text-sm whitespace-nowrap shadow-md shadow-amber-200 transition-colors flex items-center gap-1.5">
+                            <span>🔍 Cek Kesehatan Link</span>
+                        </button>
                         <button type="button" onclick="openBulkModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap shadow-md shadow-blue-200 transition-colors flex items-center gap-1.5">
                             <span>⚡ Multi-Upload (5 Link)</span>
                         </button>
@@ -499,6 +529,96 @@
         </div>
     </div>
 
+    <!-- Modal Daftar Link Shopee Bermasalah (Auto-Delete 24 Jam) -->
+    <div id="brokenLinksModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-dark-blue/40 backdrop-blur-sm opacity-0 pointer-events-none transition-all">
+        <div class="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4 rounded-[24px] shadow-2xl relative flex flex-col">
+            <div class="sticky top-0 bg-white px-8 py-5 border-b border-gray-100 flex justify-between items-center z-10 rounded-t-[24px]">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-2xl">⚠️</span>
+                    <div>
+                        <h3 class="text-xl font-bold text-red-900 font-heading leading-tight">Link Rusak / Dihapus Shopee</h3>
+                        <p class="text-xs text-red-600 font-medium">Produk di bawah ini otomatis dihapus dalam 24 jam jika tidak direspons</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeBrokenLinksModal()" class="text-gray-400 hover:text-red-500 text-3xl leading-none transition-colors">&times;</button>
+            </div>
+
+            <div class="p-8 pt-5 flex-grow flex flex-col gap-4">
+                <div class="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl text-xs text-amber-900 flex items-start gap-3">
+                    <span class="text-xl">💡</span>
+                    <div class="leading-relaxed">
+                        <strong>Aturan Penghapusan 24 Jam:</strong> Ketika produk terdeteksi link-nya mati atau dihapus oleh Shopee, Anda memiliki waktu <strong>24 jam</strong> untuk mengganti link baru atau menandainya aman. Jika lewat 24 jam tanpa respon, sistem akan <strong>otomatis menghapus produk</strong> tersebut dari katalog demi menjaga kepuasan pembeli Anda.
+                    </div>
+                </div>
+
+                <div id="brokenListContainer" class="flex flex-col gap-3">
+                    <!-- Broken items rendered via JS -->
+                </div>
+            </div>
+
+            <div class="sticky bottom-0 bg-white px-8 py-4 border-t border-gray-100 flex justify-between items-center rounded-b-[24px]">
+                <span id="brokenModalSummaryText" class="text-xs font-semibold text-gray-500">0 produk bermasalah</span>
+                <button type="button" onclick="closeBrokenLinksModal()" class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-sm transition-colors">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Audit / Cek Semua Link Shopee -->
+    <div id="auditModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-dark-blue/40 backdrop-blur-sm opacity-0 pointer-events-none transition-all">
+        <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4 rounded-[24px] shadow-2xl relative flex flex-col">
+            <div class="sticky top-0 bg-white px-8 py-5 border-b border-gray-100 flex justify-between items-center z-10 rounded-t-[24px]">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-2xl">🔍</span>
+                    <div>
+                        <h3 class="text-xl font-bold text-dark-blue font-heading leading-tight">Audit Kesehatan Link Shopee</h3>
+                        <p class="text-xs text-gray-400 font-medium">Periksa apakah semua produk di katalog masih aktif dan ada di Shopee</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAuditModal()" class="text-gray-400 hover:text-red-500 text-3xl leading-none transition-colors">&times;</button>
+            </div>
+
+            <div class="p-8 pt-5 flex-grow flex flex-col gap-4">
+                <div class="p-4 bg-blue-50/60 border border-blue-100 rounded-2xl flex flex-col gap-3">
+                    <p class="text-xs text-gray-600 leading-relaxed font-medium">
+                        Fitur ini akan mengecek tautan Shopee untuk setiap produk di katalog secara otomatis. Jika ditemukan link yang mati/dihapus, produk akan diberi peringatan <strong>24 jam</strong> sebelum otomatis dihapus.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <span id="auditTotalCatalogCount" class="text-xs font-bold text-dark-blue">Total Produk di Katalog: 0</span>
+                        <button type="button" id="btnStartAudit" onclick="startCatalogAudit()" class="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-200 transition-all flex items-center justify-center gap-1.5">
+                            <span>🚀 Mulai Pindai Semua Link</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress area -->
+                <div id="auditProgressArea" class="hidden flex flex-col gap-2 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <div class="flex justify-between items-center text-xs font-bold text-gray-700">
+                        <span id="auditProgressText">Memeriksa link produk...</span>
+                        <span id="auditProgressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+                        <div id="auditProgressBar" class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Hasil audit live -->
+                <div id="auditLogArea" class="hidden flex flex-col gap-2">
+                    <div class="flex justify-between items-center text-xs font-bold text-gray-600">
+                        <span>Log Pemeriksaan:</span>
+                        <span id="auditStatsSummary" class="text-[11px] text-gray-500">0 Sehat • 0 Rusak</span>
+                    </div>
+                    <div id="auditLogList" class="flex flex-col gap-1.5 max-h-56 overflow-y-auto p-3 bg-gray-50/80 rounded-xl border border-gray-200 text-xs font-mono">
+                        <!-- log lines -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="sticky bottom-0 bg-white px-8 py-4 border-t border-gray-100 flex justify-end gap-3 rounded-b-[24px]">
+                <button type="button" onclick="closeAuditModal()" class="px-6 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-sm transition-colors">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ====== KONFIGURASI NEON DATABASE & DATA API ======
         const NEON_DATA_API_URL = (window.__ENV__ && window.__ENV__.NEON_DATA_API_URL) || "https://ep-lingering-bird-b587vms2.apirest.c-7.us-east-2.aws.neon.tech/neondb/rest/v1";
@@ -710,6 +830,7 @@
             productsData = data || [];
             updateProductCounters(productsData);
             renderTable(productsData);
+            checkBrokenLinksStatus();
         }
 
         function renderTable(data) {
@@ -738,12 +859,25 @@
                 const safeSub = p.subcategory ? escapeHTML(p.subcategory) : '';
                 const safeId = escapeHTML(p.id);
                 const safeImage = escapeHTML(p.image_url);
+                const isError = p.link_status === 'error';
+                const errorReason = p.error_reason ? escapeHTML(p.error_reason) : 'Link Shopee mati/dihapus';
+
                 return `
-                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td class="p-4 pl-6">
-                        <img src="${safeImage}" alt="thumb" class="w-14 h-14 rounded-xl object-cover border border-gray-200 shadow-sm" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23eee%22/></svg>'">
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors ${isError ? 'bg-red-50/40' : ''}">
+                    <td class="p-4 pl-6 relative">
+                        <img src="${safeImage}" alt="thumb" class="w-14 h-14 rounded-xl object-cover border ${isError ? 'border-red-400 ring-2 ring-red-200' : 'border-gray-200'} shadow-sm" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23eee%22/></svg>'">
+                        ${isError ? '<span class="absolute top-2 left-4 text-xs">⚠️</span>' : ''}
                     </td>
-                    <td class="p-4 font-bold text-dark-blue max-w-xs truncate" title="${safeTitle}">${safeTitle}</td>
+                    <td class="p-4 max-w-xs">
+                        <div class="font-bold text-dark-blue truncate" title="${safeTitle}">${safeTitle}</div>
+                        ${isError ? `
+                        <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+                            <span class="bg-red-100 text-red-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-xs">
+                                <span>⚠️</span> <span>Link Rusak (Hapus dlm 24 Jam)</span>
+                            </span>
+                            <span class="text-[10px] text-red-500 font-semibold truncate max-w-[200px]" title="${errorReason}">${errorReason}</span>
+                        </div>` : ''}
+                    </td>
                     <td class="p-4 text-xs">
                         <span class="bg-blue-100 text-dark-blue px-2.5 py-1 rounded-md font-bold">${safeCat}</span>
                         ${safeSub ? `<br><span class="text-gray-400 mt-1.5 inline-block font-semibold">${safeSub}</span>` : ''}
@@ -784,6 +918,255 @@
 
             const elCardParfum = document.getElementById('statCardParfum');
             if (elCardParfum) elCardParfum.innerText = parfumCount;
+        }
+
+        // ====== LOGIKA AUDIT KESEHATAN LINK & ATURAN PENGHAPUSAN 24 JAM ======
+        let cachedBrokenItems = [];
+        let isAuditingCatalog = false;
+
+        async function checkBrokenLinksStatus() {
+            try {
+                const res = await fetch('/api/check-links?action=status');
+                const data = await res.json();
+                if (!data || !data.success) return;
+
+                // Jika ada produk yang otomatis dihapus karena sudah > 24 jam tidak direspon:
+                if (data.auto_purged_count > 0) {
+                    const titles = data.auto_purged_items.map(p => `• ${p.title}`).join('\n');
+                    alert(`ℹ️ SISTEM AUTO-DELETE:\n${data.auto_purged_count} produk yang link-nya rusak telah otomatis dihapus dari katalog karena sudah lebih dari 24 jam tanpa respon:\n\n${titles}`);
+                    await loadAdminProducts();
+                    return;
+                }
+
+                cachedBrokenItems = data.broken_products || [];
+                const brokenBanner = document.getElementById('brokenLinksBanner');
+                const bannerCount = document.getElementById('brokenBannerCount');
+                const bannerBtnCount = document.getElementById('brokenBannerBtnCount');
+
+                if (data.broken_count > 0) {
+                    if (bannerCount) bannerCount.innerText = data.broken_count;
+                    if (bannerBtnCount) bannerBtnCount.innerText = data.broken_count;
+                    if (brokenBanner) brokenBanner.classList.remove('hidden');
+                } else {
+                    if (brokenBanner) brokenBanner.classList.add('hidden');
+                }
+
+                // Update info di modal broken links jika sedang terbuka
+                renderBrokenList();
+            } catch (err) {
+                console.warn('Gagal cek status link rusak:', err);
+            }
+        }
+
+        function openBrokenLinksModal() {
+            const modal = document.getElementById('brokenLinksModal');
+            renderBrokenList();
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.body.classList.add('modal-active');
+        }
+
+        function closeBrokenLinksModal() {
+            const modal = document.getElementById('brokenLinksModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.classList.remove('modal-active');
+        }
+
+        function renderBrokenList() {
+            const container = document.getElementById('brokenListContainer');
+            const summaryText = document.getElementById('brokenModalSummaryText');
+            if (!container) return;
+
+            if (!cachedBrokenItems || cachedBrokenItems.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                        <span class="text-3xl">🎉</span>
+                        <p class="font-bold text-dark-blue mt-2 text-sm">Semua Link Produk Sehat!</p>
+                        <p class="text-xs text-gray-500 mt-1">Tidak ada link affiliate Shopee yang rusak atau dihapus.</p>
+                    </div>
+                `;
+                if (summaryText) summaryText.innerText = '0 produk bermasalah';
+                return;
+            }
+
+            if (summaryText) summaryText.innerText = `${cachedBrokenItems.length} produk bermasalah`;
+
+            container.innerHTML = cachedBrokenItems.map((item, idx) => {
+                const safeTitle = escapeHTML(item.title);
+                const safeUrl = escapeHTML(item.affiliate_link);
+                const safeReason = escapeHTML(item.error_reason || 'Produk tidak ditemukan di Shopee');
+                const timeLabel = item.remaining_time_label || 'Kurang dari 24 jam';
+                const isUrgent = item.remaining_ms < 6 * 60 * 60 * 1000; // di bawah 6 jam
+
+                return `
+                <div class="p-4 bg-white border border-red-200 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-start gap-3.5 min-w-0 flex-grow">
+                        <img src="${escapeHTML(item.image_url)}" alt="Thumb" class="w-16 h-16 rounded-xl object-cover border border-red-200 shrink-0" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23eee%22/></svg>'">
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-xs font-bold text-dark-blue truncate max-w-md" title="${safeTitle}">${safeTitle}</span>
+                            <span class="text-[11px] text-gray-400 font-mono truncate max-w-md mt-0.5">${safeUrl}</span>
+                            <div class="mt-1.5 flex items-center gap-2 flex-wrap">
+                                <span class="bg-red-100 text-red-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                    <span>⚠️</span> <span>${safeReason}</span>
+                                </span>
+                                <span class="${isUrgent ? 'bg-red-600 text-white animate-pulse' : 'bg-amber-100 text-amber-800'} text-[10px] font-extrabold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                    <span>⏳</span> <span>Sisa: ${timeLabel}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                        <button type="button" onclick="editProductFromBroken('${item.id}')" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-dark-blue text-xs font-bold rounded-lg transition-colors">
+                            ✏️ Ganti Link
+                        </button>
+                        <button type="button" onclick="resolveBrokenItem('${item.id}')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition-colors" title="Tandai aman jika link masih valid">
+                            🛡️ Pertahankan
+                        </button>
+                        <button type="button" onclick="deleteBrokenItemNow('${item.id}')" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition-colors">
+                            🗑️ Hapus
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function editProductFromBroken(id) {
+            closeBrokenLinksModal();
+            editProduct(id);
+        }
+
+        async function resolveBrokenItem(id) {
+            if (!confirm("Tandai produk ini aman dan pertahankan di katalog?")) return;
+            try {
+                const res = await fetch('/api/check-links', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'resolve', id })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message);
+                alert("Status produk berhasil dipulihkan!");
+                loadAdminProducts();
+            } catch (err) {
+                alert("Gagal memulihkan status: " + err.message);
+            }
+        }
+
+        async function deleteBrokenItemNow(id) {
+            if (!confirm("Hapus produk ini dari katalog sekarang tanpa menunggu 24 jam?")) return;
+            try {
+                const res = await fetch('/api/check-links', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete_now', id })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message);
+                alert("Produk berhasil dihapus!");
+                loadAdminProducts();
+            } catch (err) {
+                alert("Gagal menghapus produk: " + err.message);
+            }
+        }
+
+        // --- AUDIT KESEHATAN SELURUH LINK KATALOG ---
+        function openAuditModal() {
+            const modal = document.getElementById('auditModal');
+            document.getElementById('auditTotalCatalogCount').innerText = `Total Produk di Katalog: ${productsData.length}`;
+            document.getElementById('auditProgressArea').classList.add('hidden');
+            document.getElementById('auditLogArea').classList.add('hidden');
+            document.getElementById('auditLogList').innerHTML = '';
+            document.getElementById('btnStartAudit').disabled = false;
+            document.getElementById('btnStartAudit').innerHTML = '<span>🚀 Mulai Pindai Semua Link</span>';
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.body.classList.add('modal-active');
+        }
+
+        function closeAuditModal() {
+            if (isAuditingCatalog) {
+                if (!confirm("Pemeriksaan sedang berjalan. Tetap tutup jendela? (Pemeriksaan akan berhenti)")) return;
+                isAuditingCatalog = false;
+            }
+            const modal = document.getElementById('auditModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.classList.remove('modal-active');
+        }
+
+        async function startCatalogAudit() {
+            if (productsData.length === 0) {
+                alert("Tidak ada produk di katalog untuk diperiksa.");
+                return;
+            }
+
+            isAuditingCatalog = true;
+            const btn = document.getElementById('btnStartAudit');
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Memeriksa...</span>';
+
+            const progressArea = document.getElementById('auditProgressArea');
+            const logArea = document.getElementById('auditLogArea');
+            const logList = document.getElementById('auditLogList');
+            const progressBar = document.getElementById('auditProgressBar');
+            const progressText = document.getElementById('auditProgressText');
+            const progressPercent = document.getElementById('auditProgressPercent');
+            const statsSummary = document.getElementById('auditStatsSummary');
+
+            progressArea.classList.remove('hidden');
+            logArea.classList.remove('hidden');
+            logList.innerHTML = '';
+
+            let healthyCount = 0;
+            let brokenFound = 0;
+            const total = productsData.length;
+
+            for (let i = 0; i < total; i++) {
+                if (!isAuditingCatalog) break;
+
+                const p = productsData[i];
+                const pct = Math.round(((i + 1) / total) * 100);
+                progressBar.style.width = `${pct}%`;
+                progressPercent.innerText = `${pct}%`;
+                progressText.innerText = `Memeriksa ${i + 1} dari ${total}: ${p.title.slice(0, 25)}...`;
+
+                try {
+                    const res = await fetch('/api/check-links', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'check_single', id: p.id, affiliate_link: p.affiliate_link })
+                    });
+                    const resData = await res.json();
+
+                    if (resData.status === 'ok') {
+                        healthyCount++;
+                        logList.insertAdjacentHTML('afterbegin', `<div class="text-emerald-700 py-0.5">✅ [OK] ${escapeHTML(p.title.slice(0, 45))}</div>`);
+                    } else {
+                        brokenFound++;
+                        logList.insertAdjacentHTML('afterbegin', `<div class="text-red-600 font-bold py-0.5">❌ [RUSAK] ${escapeHTML(p.title.slice(0, 40))} (${escapeHTML(resData.reason || 'Dihapus/Error')})</div>`);
+                    }
+                } catch (err) {
+                    brokenFound++;
+                    logList.insertAdjacentHTML('afterbegin', `<div class="text-amber-600 py-0.5">⚠️ [GAGAL CEK] ${escapeHTML(p.title.slice(0, 40))} (${err.message})</div>`);
+                }
+
+                statsSummary.innerText = `${healthyCount} Sehat • ${brokenFound} Rusak`;
+
+                // Pause kecil 150ms agar stabil
+                await new Promise(r => setTimeout(r, 150));
+            }
+
+            isAuditingCatalog = false;
+            btn.disabled = false;
+            btn.innerHTML = '<span>🔄 Pindai Ulang</span>';
+            progressText.innerText = `Selesai! ${total} produk diperiksa.`;
+
+            // Reload data produk dan status broken links
+            await loadAdminProducts();
+
+            if (brokenFound > 0) {
+                alert(`⚠️ PEMERIKSAAN SELESAI!\n\nDitemukan ${brokenFound} produk dengan link yang rusak / tidak ada di Shopee.\nProduk tersebut telah ditandai dan akan otomatis dihapus jika tidak direspons dalam 24 jam.`);
+            } else {
+                alert(`🎉 SELAMAT!\n\nSeluruh ${healthyCount} produk di katalog memiliki tautan Shopee yang aktif dan valid.`);
+            }
         }
 
         // --- ANALYTICS LOGIC ---
