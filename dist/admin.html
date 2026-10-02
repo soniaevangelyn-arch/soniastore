@@ -17,8 +17,6 @@
     <script src="./dist/neon.browser.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PapaParse for CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -83,8 +81,11 @@
             </h1>
         </div>
         <nav class="flex-grow px-4 pb-4 flex flex-col gap-2">
-            <button onclick="showSection('products')" id="nav-products" class="w-full text-left py-3 px-4 rounded-xl bg-blue-50 text-dark-blue font-bold transition-all flex items-center gap-3">
-                <span>📦</span> Data Produk
+            <button onclick="showSection('products')" id="nav-products" class="w-full text-left py-3 px-4 rounded-xl bg-blue-50 text-dark-blue font-bold transition-all flex items-center justify-between">
+                <span class="flex items-center gap-3">
+                    <span>📦</span> Data Produk
+                </span>
+                <span id="navProductCount" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-white text-dark-blue border border-blue-200 shadow-xs">0</span>
             </button>
             <button onclick="showSection('analytics')" id="nav-analytics" class="w-full text-left py-3 px-4 rounded-xl hover:bg-blue-50/50 text-gray-500 font-semibold transition-all flex items-center gap-3">
                 <span>📊</span> Analytics
@@ -121,26 +122,60 @@
         <div class="p-6 md:p-8">
             <!-- SECTION: DATA PRODUK -->
             <div id="section-products">
-                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                    <h3 class="text-2xl font-bold text-dark-blue font-heading">Daftar Produk</h3>
+                <!-- Header Section Data Produk -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-2xl font-bold text-dark-blue font-heading">Daftar Produk</h3>
+                            <span class="bg-blue-50 border border-blue-200 text-blue-700 text-xs font-extrabold px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5">
+                                <span>📦</span>
+                                <span>Total: <strong id="totalProductsBadge" class="font-extrabold">0</strong> Produk</span>
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1 font-medium">Kelola seluruh produk affiliate yang aktif di website</p>
+                    </div>
                     <div class="flex flex-wrap gap-3 w-full md:w-auto justify-end">
                         <div class="relative w-full md:w-56">
                             <input type="text" id="searchInput" onkeyup="searchProducts()" placeholder="Cari judul..." class="w-full pl-10 pr-4 py-2 border-2 border-blue-100 rounded-xl focus:outline-none focus:border-blue-300 font-semibold text-sm bg-white">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                         </div>
-                        <button onclick="exportCSV()" class="bg-white border border-blue-200 text-dark-blue px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 shadow-sm transition-colors flex items-center gap-2">
-                            📥 Export
-                        </button>
-                        <label class="bg-white border border-blue-200 text-dark-blue px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 shadow-sm transition-colors flex items-center gap-2 cursor-pointer">
-                            📤 Import
-                            <input type="file" id="importCsvInput" accept=".csv" class="hidden" onchange="importCSV(event)">
-                        </label>
                         <button type="button" onclick="openBulkModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap shadow-md shadow-blue-200 transition-colors flex items-center gap-1.5">
                             <span>⚡ Multi-Upload (5 Link)</span>
                         </button>
                         <button onclick="openModal()" class="bg-dark-blue hover:bg-dark-blue-hover text-white px-5 py-2 rounded-xl font-bold whitespace-nowrap shadow-md shadow-blue-200 transition-colors">
                             + Tambah
                         </button>
+                    </div>
+                </div>
+
+                <!-- Info Cards: Ringkasan Jumlah Produk -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
+                    <div class="bg-white p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0 font-bold">
+                            🛍️
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Total Produk Terupload</span>
+                            <span class="text-2xl font-extrabold text-dark-blue font-heading" id="statCardTotal">0</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-pink-100 shadow-sm flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center text-xl shrink-0 font-bold">
+                            💄
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Perawatan & Kecantikan</span>
+                            <span class="text-2xl font-extrabold text-dark-blue font-heading" id="statCardBeauty">0</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border border-purple-100 shadow-sm flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0 font-bold">
+                            ✨
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Parfum</span>
+                            <span class="text-2xl font-extrabold text-dark-blue font-heading" id="statCardParfum">0</span>
+                        </div>
                     </div>
                 </div>
 
@@ -161,6 +196,10 @@
                     </table>
                     <div id="tableLoading" class="text-center p-10 text-blue-400 font-bold hidden">Memuat data produk... ⏳</div>
                     <div id="tableEmpty" class="text-center p-10 text-gray-400 font-semibold hidden">Belum ada produk. Tambahkan yuk!</div>
+                    <div class="p-3.5 bg-gray-50/60 border-t border-blue-50 flex items-center justify-between text-xs text-gray-500 font-semibold px-6">
+                        <span id="tableShowingCount">Menampilkan 0 produk</span>
+                        <span class="text-gray-400 text-[11px]">Katalog Sonia Beauty</span>
+                    </div>
                 </div>
             </div>
 
@@ -662,12 +701,24 @@
                 return;
             }
 
-            productsData = data;
-            renderTable(data);
+            productsData = data || [];
+            updateProductCounters(productsData);
+            renderTable(productsData);
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('productTableBody');
+            const showingEl = document.getElementById('tableShowingCount');
+            if (showingEl) {
+                if (productsData.length === 0) {
+                    showingEl.innerText = 'Belum ada produk yang terupload';
+                } else if (data.length === productsData.length) {
+                    showingEl.innerText = `Menampilkan seluruh ${data.length} produk`;
+                } else {
+                    showingEl.innerText = `Menampilkan ${data.length} dari ${productsData.length} produk`;
+                }
+            }
+
             if (data.length === 0) {
                 document.getElementById('tableEmpty').classList.remove('hidden');
                 tbody.innerHTML = '';
@@ -706,100 +757,27 @@
             renderTable(filtered);
         }
 
-        // --- CSV LOGIC ---
-        function exportCSV() {
-            if (productsData.length === 0) {
-                alert("Tidak ada data produk untuk diexport.");
-                return;
-            }
-            
-            const exportData = productsData.map(p => ({
-                id: p.id,
-                title: p.title,
-                category: p.category,
-                subcategory: p.subcategory || '',
-                affiliate_link: p.affiliate_link,
-                image_url: p.image_url
-            }));
+        // --- PRODUCT COUNTERS LOGIC ---
+        function updateProductCounters(data) {
+            const list = Array.isArray(data) ? data : productsData;
+            const total = list.length;
+            const beautyCount = list.filter(p => p.category === 'Perawatan & Kecantikan').length;
+            const parfumCount = list.filter(p => p.category === 'Parfum').length;
 
-            const csv = Papa.unparse(exportData);
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Sonia_Produk_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+            const elTotalBadge = document.getElementById('totalProductsBadge');
+            if (elTotalBadge) elTotalBadge.innerText = total;
 
-        function importCSV(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+            const elNavCount = document.getElementById('navProductCount');
+            if (elNavCount) elNavCount.innerText = total;
 
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: async function(results) {
-                    const data = results.data;
-                    if (data.length === 0) {
-                        alert("File CSV kosong atau format header tidak sesuai.");
-                        e.target.value = '';
-                        return;
-                    }
+            const elCardTotal = document.getElementById('statCardTotal');
+            if (elCardTotal) elCardTotal.innerText = total;
 
-                    if (!confirm(`Ditemukan ${data.length} baris di dalam CSV. Mulai proses import?`)) {
-                        e.target.value = ''; 
-                        return;
-                    }
+            const elCardBeauty = document.getElementById('statCardBeauty');
+            if (elCardBeauty) elCardBeauty.innerText = beautyCount;
 
-                    document.getElementById('tableLoading').classList.remove('hidden');
-                    document.getElementById('tableLoading').innerText = "Sedang mengimpor data ke Neon Database... Mohon tunggu ⏳";
-                    document.getElementById('tableEmpty').classList.add('hidden');
-                    document.getElementById('productTableBody').innerHTML = '';
-
-                    let successCount = 0;
-                    let errorCount = 0;
-
-                    for (const row of data) {
-                        try {
-                            const payload = {
-                                title: row.title,
-                                category: row.category,
-                                subcategory: row.subcategory || null,
-                                price: parseInt(row.price) || 0,
-                                discount_price: null,
-                                sales: 0,
-                                affiliate_link: row.affiliate_link,
-                                image_url: row.image_url
-                            };
-                            
-                            if (row.id && row.id.trim() !== '') {
-                                // Upsert based on existing ID
-                                const { error } = await client.from('products').upsert({ id: row.id, ...payload });
-                                if (error) throw error;
-                            } else {
-                                // Insert new row
-                                const { error } = await client.from('products').insert([payload]);
-                                if (error) throw error;
-                            }
-                            successCount++;
-                        } catch (err) {
-                            console.error("Gagal import baris:", row.title, err);
-                            errorCount++;
-                        }
-                    }
-
-                    alert(`Proses Import Selesai!\n✅ Berhasil: ${successCount}\n❌ Gagal: ${errorCount}`);
-                    e.target.value = ''; // Reset file input
-                    document.getElementById('tableLoading').innerText = "Memuat data produk... ⏳";
-                    loadAdminProducts();
-                },
-                error: function(err) {
-                    alert("Error membaca file CSV: " + err.message);
-                    e.target.value = '';
-                }
-            });
+            const elCardParfum = document.getElementById('statCardParfum');
+            if (elCardParfum) elCardParfum.innerText = parfumCount;
         }
 
         // --- ANALYTICS LOGIC ---
